@@ -10,10 +10,11 @@ var API_KEY     = "wanikanify_apiKey";
 
 // filter map
 var FILTER_MAP = {
-    "apprentice":  function(vocab) { return vocab.stats != null && vocab.stats.srs == "apprentice"; },
-    "guru":        function(vocab) { return vocab.stats != null && vocab.stats.srs == "guru"; },
-    "master":      function(vocab) { return vocab.stats != null && vocab.stats.srs == "master"; },
-    "enlighten":   function(vocab) { return vocab.stats != null && vocab.stats.srs == "enlighten"; }
+    "apprentice":  function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "apprentice"; },
+    "guru":        function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "guru"; },
+    "master":      function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "master"; },
+    "enlighten":   function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "enlighten"; },
+    "burned":      function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "burned"; }
 };
 
 // The main program driver.
@@ -33,7 +34,7 @@ function main(cache) {
     var vocabDictionary = toDictionary(filteredList);
     var dictionaryCallback = buildDictionaryCallback(vocabDictionary);
 
-    $("body *:not(noscript):not(script)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
+    $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
 }
 
 // Returns the filters to use for vocab filtering
@@ -82,7 +83,7 @@ function tryWaniKani(apiKey, async) {
         async: async,
         accepts: "application/json",
         type: "GET",
-        url: "http://www.wanikani.com/api/user/"+apiKey+"/vocabulary",
+        url: "http://www.wanikani.com/api/v1.2/user/"+apiKey+"/vocabulary",
     }).done(function (response) {
         if (response.error) {
             console.error("Vocabulary request failed.");
@@ -133,6 +134,12 @@ function toDictionary(vocabList) {
         for (var i = 0; i < values.length; i++) {
             vocab[values[i]] = character;
         }
+		var user_synonyms = value.user_specific.user_synonyms;
+		if (user_synonyms) {
+			for (var i = 0; i < user_synonyms.length; i++) {
+				vocab[user_synonyms[i]] = character;
+			}
+		}
     });
     return vocab;
 }
