@@ -13,3 +13,7 @@ Wanikanify takes the vocabulary you've studied on Wanikani, finds the english wo
 To get started, install the extension, and go to the options page. Add your public WaniKani API key, which can be found on on the WaniKani website, and hit save.
 
 Navigate to your favorite webpages, hit the Crabigator and read as normal. As you read you'll come across kanji characters you should know. Do you remember what the mean? How to pronounce them?
+
+## Contributors 
+
+* Michael Magill 
