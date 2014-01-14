@@ -1,6 +1,6 @@
 function add_black_list_item(value) {
     var $blackListTable = $('#blackListTable > tbody:last');
-    $blackListTable.append('<tr><td><input type="text"><button class="btn btn-danger pull-right removeBlackListItem" type="button">Remove Item</button></td></tr>');
+    $blackListTable.append('<tr><td><input type="text" class="input-xlarge"><button class="btn btn-danger pull-right removeBlackListItem" type="button">Remove Item</button></td></tr>');
 
     if (typeof value === 'string') {
         $('#blackListTable input:last').val(value);
@@ -41,9 +41,6 @@ function save_options() {
     }).get();
 
     chrome.storage.local.set({"wanikanify_blackList":blackList});
-
-    // TODO: CLEAN. do one set!
-    clear_cache();
 }
 
 function restore_options() {
