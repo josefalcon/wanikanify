@@ -8,11 +8,31 @@ var executed = {}
 // Injects JS into the tab.
 // executeScripts : Object ->
 function executeScripts(tab) {
-    chrome.tabs.executeScript(null, { file: "js/jquery.js" }, function() {
-        chrome.tabs.executeScript(null, { file: "js/replaceText.js" }, function() {
-            chrome.tabs.executeScript(null, { file: "js/content.js" }, function() {
-                executed[tab] = "jp";
-            });
+    chrome.tabs.get(tab, function(details) {
+        chrome.storage.local.get(['wanikanify_blackList'], function(items) {
+            var url = details.url,
+                blackList = items.wanikanify_blackList,
+                skipTest = false;
+
+            var matcher;
+            if (blackList.length == 0) {
+                skipTest = true;
+            } else {
+                matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
+            }
+
+
+            if (skipTest || !matcher.test(url)) {
+                chrome.tabs.executeScript(null, { file: "js/jquery.js" }, function() {
+                    chrome.tabs.executeScript(null, { file: "js/replaceText.js" }, function() {
+                        chrome.tabs.executeScript(null, { file: "js/content.js" }, function() {
+                            executed[tab] = "jp";
+                        });
+                    });
+                });
+            } else {
+                console.log(url + " is blacklisted");
+            }
         });
     });
 }
@@ -39,8 +59,6 @@ function loadOnUpdated(tab, change) {
 function setLanguage(lang) {
     var inner = "data-" + lang;
     var title = "data-" + (lang == "jp" ? "en" : "jp");
-    console.log(inner);
-    console.log(title);
     chrome.tabs.executeScript(null,
         {code:"$(\".wanikanified\").each(function(index, value) { value.innerHTML = value.getAttribute('" + inner + "'); value.title = value.getAttribute('" + title + "'); })"});
 }

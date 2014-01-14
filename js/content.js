@@ -47,25 +47,32 @@ function getFilters(cache) {
         });
     }
     return [];
-}   
+}
 
-// Returns a dictionary from String -> String. 
+// Returns a dictionary from String -> String.
 // tryCacheOrWaniKani : Object, String -> Object
-function tryCacheOrWaniKani(cache, apiKey) {   
+function tryCacheOrWaniKani(cache, apiKey) {
     function isExpired(date) {
         var then = new Date(date);
         var now = new Date();
-        return (Math.abs(now - then) > 600000);
+        return (Math.abs(now - then) > 3600000);
     }
 
     var hit = cache[VOCAB_KEY];
     if (hit && hit.vocabList) {
         if (!hit.inserted || isExpired(hit.inserted)) {
+            console.log("going to wanikani async");
+            var then = new Date(hit.inserted);
+            var now = new Date();
+            console.log((Math.abs(now - then) > 3600000));
             tryWaniKani(apiKey, true);
         }
         return hit.vocabList;
     }
 
+    console.log("going to wanikani sync");
+    console.log(cache);
+    console.log(hit);
     var waniKaniList = tryWaniKani(apiKey, false);
     return waniKaniList;
 }
@@ -100,7 +107,7 @@ function tryWaniKani(apiKey, async) {
 }
 
 // Caches a given [Object] of vocabulary words with an inserted date
-// cacheVocabList: [Object] -> 
+// cacheVocabList: [Object] ->
 function cacheVocabList(vocabList) {
     var obj = {};
     obj[VOCAB_KEY] = {

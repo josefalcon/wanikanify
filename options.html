@@ -32,7 +32,7 @@
       </div>
 
       <hr>
-      
+
       <div class="alert alert-error hide">
         <strong>Error!</strong> You must provide an API key!
       </div>
@@ -122,6 +122,19 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div class="row-fluid">
+        <h4>Black List</h4>
+        <p>
+          Wanikanify will not run on the sites below. Use regular expressions for URL patterns.
+          A site is blacklisted if <em>any</em> pattern matches the URL. Be sure to click the
+          <strong>save</strong> button to save any changes to this list.
+        </p>
+        <table id="blackListTable" class="table table-bordered table-striped table-hover">
+          <tbody>
+          </tbody>
+        </table>
+        <button id="addBlackListItem" class="btn" type="button">Add Item</button>
       </div>
       <hr>
       <p>
