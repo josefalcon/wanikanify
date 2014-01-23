@@ -84,7 +84,7 @@ function tryWaniKani(apiKey, async) {
         async: async,
         accepts: "application/json",
         type: "GET",
-        url: "http://www.wanikani.com/api/v1.2/user/"+apiKey+"/vocabulary",
+        url: "https://www.wanikani.com/api/v1.2/user/"+apiKey+"/vocabulary",
     }).done(function (response) {
         if (response.error) {
             console.error("Vocabulary request failed.");
