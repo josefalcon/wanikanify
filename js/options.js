@@ -39,16 +39,20 @@ function save_options() {
     }).filter(function(index, value) {
         return value;
     }).get();
-
+	
     chrome.storage.local.set({"wanikanify_blackList":blackList});
+	
+	var customVocab = $("#customVocab").val();
+	chrome.storage.local.set({"wanikanify_customvocab":customVocab});
 }
 
 function restore_options() {
-    chrome.storage.local.get(["wanikanify_apiKey","wanikanify_runOn", "wanikanify_srs", "wanikanify_blackList"], function(items) {
+    chrome.storage.local.get(["wanikanify_apiKey","wanikanify_runOn", "wanikanify_srs", "wanikanify_blackList", "wanikanify_customvocab"], function(items) {
         var apiKey = items.wanikanify_apiKey;
         if (apiKey) {
             $("#apiKey").val(apiKey);
         }
+		
         var runOn = items.wanikanify_runOn;
         if (runOn == "onUpdated") {
             $('#runOnUpdated').click();
@@ -71,6 +75,11 @@ function restore_options() {
         $.each(blackList, function(i, value) {
             add_black_list_item(value);
         });
+		
+        var customVocab = items.wanikanify_customvocab;
+        if (customVocab) {
+            $("#customVocab").val(customVocab);
+        }
     });
 }
 

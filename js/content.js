@@ -4,9 +4,10 @@
  */
 
 // cache keys
-var VOCAB_KEY   = "wanikanify_vocab";
-var SRS_KEY     = "wanikanify_srs";
-var API_KEY     = "wanikanify_apiKey";
+var VOCAB_KEY      = "wanikanify_vocab";
+var SRS_KEY        = "wanikanify_srs";
+var API_KEY        = "wanikanify_apiKey";
+var CUST_VOCAB_KEY = "wanikanify_customvocab";
 
 // filter map
 var FILTER_MAP = {
@@ -33,6 +34,28 @@ function main(cache) {
     var filteredList = filterVocabList(vocabList, getFilters(cache));
     var vocabDictionary = toDictionary(filteredList);
     var dictionaryCallback = buildDictionaryCallback(vocabDictionary);
+	
+	// Dump in the custom vocabulary words, overriding the wanikani entries.
+	var ENTRY_DELIM = "\n";
+	var ENG_JAP_COMBO_DELIM = ";";
+	var ENG_VOCAB_DELIM = ",";
+	var customVocab = cache[CUST_VOCAB_KEY];
+    if (customVocab && customVocab.length > 0) {
+		// Explode entire list into sets of englishwords and japanese combinations.
+        var splitList = customVocab.split(ENTRY_DELIM);
+		for (i = 0; i < splitList.length; i++) {
+			// Explode each entry into english words and Kanji.
+			var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
+			var kanjiVocabWord = splitEntry[1].trim();
+			for (j = 0; j < splitEntry.length; j++) {
+				var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
+				for (k = 0; k < splitEnglishWords.length; k++) {
+					// If it already exists, it gets replaced.
+					vocabDictionary[splitEnglishWords[k]] = kanjiVocabWord.trim();
+				}
+			}
+		}
+    }
 
     $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
 }
@@ -160,4 +183,4 @@ function buildDictionaryCallback(vocabDictionary) {
 }
 
 // kick off the program
-chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY], main);
+chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY], main);
