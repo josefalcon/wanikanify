@@ -34,27 +34,27 @@ function main(cache) {
     var filteredList = filterVocabList(vocabList, getFilters(cache));
     var vocabDictionary = toDictionary(filteredList);
     var dictionaryCallback = buildDictionaryCallback(vocabDictionary);
-	
-	// Dump in the custom vocabulary words, overriding the wanikani entries.
-	var ENTRY_DELIM = "\n";
-	var ENG_JAP_COMBO_DELIM = ";";
-	var ENG_VOCAB_DELIM = ",";
-	var customVocab = cache[CUST_VOCAB_KEY];
+
+    // Dump in the custom vocabulary words, overriding the wanikani entries.
+    var ENTRY_DELIM = "\n";
+    var ENG_JAP_COMBO_DELIM = ";";
+    var ENG_VOCAB_DELIM = ",";
+    var customVocab = cache[CUST_VOCAB_KEY];
     if (customVocab && customVocab.length > 0) {
-		// Explode entire list into sets of englishwords and japanese combinations.
+        // Explode entire list into sets of englishwords and japanese combinations.
         var splitList = customVocab.split(ENTRY_DELIM);
-		for (i = 0; i < splitList.length; i++) {
-			// Explode each entry into english words and Kanji.
-			var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
-			var kanjiVocabWord = splitEntry[1].trim();
-			for (j = 0; j < splitEntry.length; j++) {
-				var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
-				for (k = 0; k < splitEnglishWords.length; k++) {
-					// If it already exists, it gets replaced.
-					vocabDictionary[splitEnglishWords[k]] = kanjiVocabWord.trim();
-				}
-			}
-		}
+        for (i = 0; i < splitList.length; i++) {
+            // Explode each entry into english words and Kanji.
+            var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
+            var kanjiVocabWord = splitEntry[1].trim();
+            for (j = 0; j < splitEntry.length; j++) {
+                var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
+                for (k = 0; k < splitEnglishWords.length; k++) {
+                    // If it already exists, it gets replaced.
+                    vocabDictionary[splitEnglishWords[k]] = kanjiVocabWord.trim();
+                }
+            }
+        }
     }
 
     $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
@@ -158,12 +158,12 @@ function toDictionary(vocabList) {
         for (var i = 0; i < values.length; i++) {
             vocab[values[i]] = character;
         }
-		var user_synonyms = value.user_specific.user_synonyms;
-		if (user_synonyms) {
-			for (var i = 0; i < user_synonyms.length; i++) {
-				vocab[user_synonyms[i]] = character;
-			}
-		}
+        var user_synonyms = value.user_specific.user_synonyms;
+        if (user_synonyms) {
+            for (var i = 0; i < user_synonyms.length; i++) {
+                vocab[user_synonyms[i]] = character;
+            }
+        }
     });
     return vocab;
 }
