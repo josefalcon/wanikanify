@@ -57,6 +57,9 @@ function main(cache) {
         }
     }
 
+    
+    console.log(Object.keys(vocabDictionary).length);
+
     $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
 }
 

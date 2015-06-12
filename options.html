@@ -22,6 +22,8 @@
 
     <script src="js/jquery.js"></script>
     <script src="js/options.js"></script>
+    <script src="js/tabletop.js"></script>
+    
   </head>
 
   <body>
@@ -124,12 +126,12 @@
               <td>
                 <h4>Custom Vocabulary</h4>
                 <p>
-                  You are no longer limited to wanikani's set of vocabulary and kanji!</br>
-                  Format: EnglishWord,EnglishWord2, ...;JapaneseWord1</br>
+                  You are no longer limited to Wanikani's set of vocabulary and Kanji!</br>
+                  Format: english_word_1,english_word_2, ...;japanese_word_1</br>
                   Example: cat,feline;猫</br>
-                  Each entry on a separate line. English words and Japanese word are separated by a semicolon.
-                  This also overrides any wanikani functionality if the default functionality doesn't map well.
-                  This can also be used to map english/spanish/etc. to any other language if you so choose.
+                  Each entry on a separate line. English words and Japanese words are separated by a semicolon.
+                  This also overrides any Wanikani functionality if the default functionality doesn't map well.
+                  This can also be used to map English/Spanish/etc. to any other language if you so choose.
                 </p>
               </td>
               <td></td>
@@ -152,6 +154,26 @@
           </tbody>
         </table>
         <button id="addBlackListItem" class="btn" type="button">Add Item</button>
+      </div>
+      <hr>
+      <div class="row-fluid">
+        <h4>Google Spreadsheet Import List</h4>
+        <p>
+          Similar to "Custom Vocabulary", but more extensive. Allows users to use shared vocabulary lists.
+          <ul>
+              <li>Make sure it's published. File->Publish to web</li>
+              <li>Grab the "key" from the URL, and put it below. Looks something like this: 1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k</li>
+              <li>Make sure the columns in the spreadsheet are all named (has a header row at the top). Do not leave any empty.</li>
+              <li>From column header: The name of the column (in the header) we want to map from (column of English words).</li>
+              <li>To column header: The name of the column (in the header) we want to map to (column of Kanji/Japanese words).</li>
+              <li>The English word column can contain multiple words, separated by a delimiter (default is a comma). Spaces after the delimiter are okay.</li>
+          </ul>
+        </p>
+        <table id="googleSpreadSheetListTable" class="table table-bordered table-striped table-hover">
+          <tbody>
+          </tbody>
+        </table>
+        <button id="addGoogleSpreadSheetListItem" class="btn" type="button">Add Spreadsheet</button>
       </div>
       <hr>
       <p>
