@@ -1,3 +1,11 @@
+var allImportedVocabDictionaries = {};
+var public_spreadsheet_key = "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k";
+var sheet_name = "6k Pt 1";
+var delim = ";";
+var to_column = "Kanji";
+var from_column = "English";
+
+// ------------------------------------------------------------------------------------------------
 function add_black_list_item(value) {
     var $blackListTable = $('#blackListTable > tbody:last');
     $blackListTable.append('<tr><td><input type="text" class="input-xlarge"><button class="btn btn-danger pull-right removeBlackListItem" type="button">Remove Item</button></td></tr>');
@@ -12,18 +20,19 @@ function add_black_list_item(value) {
     });
 }
 
+// ------------------------------------------------------------------------------------------------
 function add_empty_google_spread_sheet_list_item(value) {
-    add_google_spread_sheet_list_item("1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ";", "Kanji", "6k Pt 1");
+    add_google_spread_sheet_list_item(
+    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k",
+    "English", ";", "Kanji", "6k Pt 1");
 }
 
-var allImportedVocabDictionaries = [];
-var public_spreadsheet_key = "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k";
-var sheet_name = "6k Pt 1";
-var delim = ";";
-var to_column = "Kanji";
-var from_column = "English";
-
-function add_google_spread_sheet_list_item(public_spreadsheet_key, from_column, delim, to_column, sheet_name) {
+// ------------------------------------------------------------------------------------------------
+function add_google_spread_sheet_list_item(public_spreadsheet_key,
+                                           from_column,
+                                           delim,
+                                           to_column,
+                                           sheet_name) {
     var $googleSpreadSheetListTable = $('#googleSpreadSheetListTable > tbody:last');
     $googleSpreadSheetListTable.append('<tr></tr>');
     // Grab the last row element.
@@ -37,6 +46,9 @@ function add_google_spread_sheet_list_item(public_spreadsheet_key, from_column, 
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
 
     $('.removeGoogleSpreadSheetListItem:last').click(function() {
+        var public_spreadsheet_key = row.find('input[name=spreadsheet_key]').val();
+        var sheet_name = row.find('input[name=sheet_name]').val();
+        deleteCacheVocabList(public_spreadsheet_key + " - " + sheet_name);
         $(this).closest('tr').unbind().remove();
         return false;
     });
@@ -49,6 +61,7 @@ function add_google_spread_sheet_list_item(public_spreadsheet_key, from_column, 
         //to_column = row.find('input[name=to_col_header]').val();
         //from_column = row.find('input[name=from_col_header]').val();
 
+        // TODO: Import one sheet at a time.
         Tabletop.init( { key: public_spreadsheet_key,
                          callback: importData,
                          wanted: [ sheet_name ],
@@ -59,11 +72,15 @@ function add_google_spread_sheet_list_item(public_spreadsheet_key, from_column, 
             $.each( tabletop.sheets(sheet_name).all(), function(i, entry) {
                 var splitEnglishWords = entry.English.split(delim);
                 for (k = 0; k < splitEnglishWords.length; k++) {
-                    importedVocabDictionary[splitEnglishWords[k].trim()] = entry.Kanji.trim();
+                    var eng_words = splitEnglishWords[k].trim();
+                    var jap_word = entry.Kanji.trim();
+                    if (eng_words.length == 0 || jap_word.length == 0)
+                        continue;
+                    var o = {eng: eng_words, jap: jap_word};
+                    importedVocabDictionary.push(o);
                 }
             })
             allImportedVocabDictionaries[public_spreadsheet_key + ' - ' + sheet_name] = importedVocabDictionary;
-            debugger;
             console.log("Imported vocab entries: " + Object.keys(importedVocabDictionary).length);
         }
     
@@ -71,16 +88,66 @@ function add_google_spread_sheet_list_item(public_spreadsheet_key, from_column, 
     });
 }
 
-function cacheVocabList(vocabList) {
-    var obj = {};
-    obj[VOCAB_KEY] = {
-        "inserted": (new Date()).toJSON(),
-        "vocabList": vocabList
-    };
-
-    chrome.storage.local.set(obj);
+// ------------------------------------------------------------------------------------------------
+function deleteCacheVocabList(key)
+{
+    delete allImportedVocabDictionaries[key];
+    saveAllImported();
 }
 
+// ------------------------------------------------------------------------------------------------
+function saveAllImported() {
+    
+    // TODO: Save spreadsheet key and stuff.
+    // Save the google spreadsheet import settings.
+    //$row.append('<td><input type="text" class="input-medium" name="spreadsheet_key" placeholder="Spreadsheet key" value="' + public_spreadsheet_key + '"></td>');
+    //$row.append('<td><input type="text" class="input-medium" name="from_col_header" placeholder="From column header" value="' + from_column + '"></td>');
+    //$row.append('<td><input type="text" class="input-mini" name="delim" placeholder="Delimiter" value="' + delim + '"></td>');
+    //$row.append('<td><input type="text" class="input-medium" name="to_col_header" placeholder="To column header" value="' + to_column + '"></td>');
+    //$row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
+
+    // Retrieve the entire list.
+    var googleSpreadSheetList = $('#googleSpreadSheetListTable input:text').map(function() {
+        return $(this).val();
+    }).filter(function(index, value) {
+        return value;
+    }).get();
+    
+    var obj = {};
+    obj["wanikanify_googleVocabKey"] = {
+        // Google spreadsheet import key
+        //"googleSpreadsheetKey" : 
+        // To column
+        // Delimiter
+        // From column
+        // Map of data
+        inserted: (new Date()).toJSON(),
+        vocab: allImportedVocabDictionaries
+    };
+    chrome.storage.local.set(obj, function(data) {
+        console.log("Saved google data.");
+        for (var name in data)
+            console.log(name);
+        if(chrome.runtime.lastError)
+        {
+            console.log("Could not save google data.");
+            return;
+        }
+    });
+}
+
+// ------------------------------------------------------------------------------------------------
+function loadAllImported(items) {
+    var data = items.wanikanify_googleVocabKey;
+    if (!data) {
+        console.log("No Google data to load.");
+        return;
+    }
+    allImportedVocabDictionaries = data;
+    console.log("Loaded Google data.");
+}
+
+// ------------------------------------------------------------------------------------------------
 function save_options() {
     var apiKey = $("#apiKey").val();
     if (!apiKey) {
@@ -110,44 +177,15 @@ function save_options() {
     }).get();
 
     chrome.storage.local.set({"wanikanify_blackList":blackList});
-    
-    // Save the google spreadsheet import settings.
-    $row.append('<td><input type="text" class="input-medium" name="spreadsheet_key" placeholder="Spreadsheet key" value="' + public_spreadsheet_key + '"></td>');
-    $row.append('<td><input type="text" class="input-medium" name="from_col_header" placeholder="From column header" value="' + from_column + '"></td>');
-    $row.append('<td><input type="text" class="input-mini" name="delim" placeholder="Delimiter" value="' + delim + '"></td>');
-    $row.append('<td><input type="text" class="input-medium" name="to_col_header" placeholder="To column header" value="' + to_column + '"></td>');
-    $row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
 
-    // Retrieve the entire list.
-    var googleSpreadSheetList = $('#googleSpreadSheetListTable input:text').map(function() {
-        return $(this).val();
-    }).filter(function(index, value) {
-        return value;
-    }).get();
-    
-    // For each entry in the list grab the key, from, delim, to, & sheet name.
-
-    
-    /*
-    var googleSpreadSheetList = $('#googleSpreadSheetListTable input:text').map(function() {
-        return $(this).val();
-    }).filter(function(index, value) {
-        return value;
-    }).get();
-    */
-    chrome.storage.local.set({"wanikanify_googleSpreadSheetList":googleSpreadSheetList});
-
-    // Save the imported vocab. (probably huge)
-    // alert(JSON.stringify(result));
-    //console.log(JSON.stringify(allImportedVocabDictionaries["1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k - 6k Pt 1"]));
-    //var stuff = JSON.stringify(allImportedVocabDictionaries["1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k - 6k Pt 1"]);
-    //chrome.storage.local.set({"wanikanify_allImportedVocabDictionaries":stuff});
+    saveAllImported();
     
     // Save the custom vocab data.
     var customVocab = $("#customVocab").val();
     chrome.storage.local.set({"wanikanify_customvocab":customVocab});
 }
 
+// ------------------------------------------------------------------------------------------------
 function restore_options() {
     chrome.storage.local.get([
         "wanikanify_apiKey",
@@ -155,8 +193,7 @@ function restore_options() {
         "wanikanify_srs",
         "wanikanify_blackList",
         "wanikanify_customvocab",
-        "wanikanify_googleSpreadSheetList",
-        "wanikanify_allImportedVocabDictionaries"],
+        "wanikanify_googleVocabKey"],
         function(items) {
             var apiKey = items.wanikanify_apiKey;
             if (apiKey) {
@@ -191,26 +228,21 @@ function restore_options() {
                 $("#customVocab").val(customVocab);
             }
             
-            // Load all saved imported list item settings.
-            //var googleSpreadSheetList = items.wanikanify_googleSpreadSheetList;
-            //$.each(googleSpreadSheetList, function(i, value) {
-            //    add_google_spread_sheet_list_item(key, from_col, delim, to_col);
-            //});
-            
-            // Load all imported vocab.
-            var all_imported_vocab = items.wanikanify_allImportedVocabDictionaries;
-            if (all_imported_vocab)
-                allImportedVocabDictionaries = all_imported_vocab;
+            loadAllImported(items);
         }
     );
 }
 
+// ------------------------------------------------------------------------------------------------
 function clear_cache() {
     chrome.storage.local.remove("wanikanify_vocab");
-    //chrome.storage.local.remove("wanikanify_google_import_data")
+    chrome.storage.local.remove("wanikanify_customvocab");
+    // TODO: Clear the text box? Or maybe don't clear custom vocab?
+    chrome.storage.local.remove("wanikanify_googleVocabKey");
     $(".alert-success").show();
 }
 
+// ------------------------------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', restore_options);
 document.addEventListener('DOMContentLoaded', function() {
     $('#save').click(save_options);

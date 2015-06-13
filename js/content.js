@@ -8,6 +8,7 @@ var VOCAB_KEY      = "wanikanify_vocab";
 var SRS_KEY        = "wanikanify_srs";
 var API_KEY        = "wanikanify_apiKey";
 var CUST_VOCAB_KEY = "wanikanify_customvocab";
+var GOOG_VOCAB_KEY = "wanikanify_googleVocabKey"
 
 // filter map
 var FILTER_MAP = {
@@ -177,7 +178,7 @@ function buildDictionaryCallback(vocabDictionary) {
     return function(str) {
         var translation = vocabDictionary[str.toLowerCase()];
         if (translation) {
-//            return '<span class="wanikanified" title="' + str + '" onClick=";">' + translation + '<\/span>'
+//          return '<span class="wanikanified" title="' + str + '" onClick=";">' + translation + '<\/span>'
             return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + translation +
                 '" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + translation + '<\/span>';
         }
@@ -186,4 +187,4 @@ function buildDictionaryCallback(vocabDictionary) {
 }
 
 // kick off the program
-chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY], main);
+chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_KEY], main);
