@@ -1,0 +1,15 @@
+todo:
+
+Get rows to auto populate based on what was saved before.
+Make sure saving and deleting occurs properly.
+Make sure deleting a row deletes stuff properly.
+Add in progress download indicator for each entry. Could use JQueryUI lib.
+Add in text that tells the user how many entries were imported.
+I want the user to be able to specify whether or not it has a header.
+After each import, save the list of vocab immediately.
+I want the user to be able to specify the columns by number or by the google column identifier (A, B, C, etc.)
+
+Change everything over to use chrome sync.
+    - In each row, I want a status stating how many have been imported.
+
+Add in functionality to play the sound when user clicks on it.

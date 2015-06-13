@@ -1,5 +1,8 @@
+// An object that contains a dictionary of sheet collections.
+// Each sheet collection contains a dictionary of sheets.
+// Each sheet is an array 
 var allImportedVocabDictionaries = {};
-var public_spreadsheet_key = "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k";
+var public_spreadsheet_collection_key = "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k";
 var sheet_name = "6k Pt 1";
 var delim = ";";
 var to_column = "Kanji";
@@ -22,13 +25,57 @@ function add_black_list_item(value) {
 
 // ------------------------------------------------------------------------------------------------
 function add_empty_google_spread_sheet_list_item(value) {
+    // HACK: This is just to auto populate for dev's convenience for now.
     add_google_spread_sheet_list_item(
-    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k",
-    "English", ";", "Kanji", "6k Pt 1");
+    public_spreadsheet_collection_key,
+    from_column, delim, to_column, sheet_name);
 }
 
 // ------------------------------------------------------------------------------------------------
-function add_google_spread_sheet_list_item(public_spreadsheet_key,
+// Handler for when data has been grabbed from the Google Spreadsheet API.
+function on_google_import(data, tabletop) {
+    var importedVocabArray = [];
+    
+    // FIX: Should only be one? Probably need a for loop.
+    var sheet_name = data[Object.keys(data)[0]].name;
+
+    // Parse table data and dump into an array.
+    // For each spreadsheet. (Just one, since we only do one at a time.)
+    var sheets = tabletop.sheets(sheet_name).all();
+    $.each(sheets, function(i, entry) {
+        // Split up the english words by the delimiter (comma?).
+        var splitEnglishWords = entry.English.split(delim);
+        for (k = 0; k < splitEnglishWords.length; k++) {
+            var eng_words = splitEnglishWords[k].trim();
+            var jap_word = entry.Kanji.trim();
+            if (eng_words.length == 0 || jap_word.length == 0)
+                continue;
+            var o = {eng: eng_words, jap: jap_word};
+            importedVocabArray.push(o);
+        }
+    })
+    
+    // Dump array of data into the master dictionary.
+    // Grab the spreadsheet object.
+    var all_sheets = allImportedVocabDictionaries[public_spreadsheet_collection_key];
+    if (!all_sheets) {
+        // No entry for this spreadsheet.
+        // Create an empty spreadsheet object.
+        var sheets = {};
+        allImportedVocabDictionaries[public_spreadsheet_collection_key] = sheets;
+        all_sheets = allImportedVocabDictionaries[public_spreadsheet_collection_key];
+    }
+    // Add or replace vocab to this particular sheet.
+    all_sheets[sheet_name] = importedVocabArray;
+
+    console.log("Imported " + importedVocabArray.length + " from " + sheet_name +
+                " in collection " + public_spreadsheet_collection_key);
+}
+        
+// ------------------------------------------------------------------------------------------------
+// spreadsheet_collection_key: The unique id for the spreadsheet collection (found in the url).
+// sheet_name: A single spreadsheet name. A spreadsheet collection can have multiple sheets.
+function add_google_spread_sheet_list_item(spreadsheet_collection_key,
                                            from_column,
                                            delim,
                                            to_column,
@@ -46,52 +93,36 @@ function add_google_spread_sheet_list_item(public_spreadsheet_key,
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
 
     $('.removeGoogleSpreadSheetListItem:last').click(function() {
-        var public_spreadsheet_key = row.find('input[name=spreadsheet_key]').val();
+        var spreadsheet_collection_key = row.find('input[name=spreadsheet_key]').val();
         var sheet_name = row.find('input[name=sheet_name]').val();
-        deleteCacheVocabList(public_spreadsheet_key + " - " + sheet_name);
+        deleteCacheVocabList(spreadsheet_collection_key, sheet_name);
         $(this).closest('tr').unbind().remove();
         return false;
     });
     
     $('.importGoogleSpreadSheetData:last').click(function() {
         var row = $(this).closest('tr');
-        //public_spreadsheet_key = row.find('input[name=spreadsheet_key]').val();
+        //spreadsheet_collection_key = row.find('input[name=spreadsheet_key]').val();
         //sheet_name = row.find('input[name=sheet_name]').val();
         //delim = row.find('input[name=delim]').val();
         //to_column = row.find('input[name=to_col_header]').val();
         //from_column = row.find('input[name=from_col_header]').val();
 
         // TODO: Import one sheet at a time.
-        Tabletop.init( { key: public_spreadsheet_key,
-                         callback: importData,
-                         wanted: [ sheet_name ],
+        // Imports the data.
+        Tabletop.init( { key: spreadsheet_collection_key,
+                         callback: on_google_import,
+                         wanted: [sheet_name],
                          debug: true } );
-
-        function importData(data, tabletop) {
-            var importedVocabDictionary = [];
-            $.each( tabletop.sheets(sheet_name).all(), function(i, entry) {
-                var splitEnglishWords = entry.English.split(delim);
-                for (k = 0; k < splitEnglishWords.length; k++) {
-                    var eng_words = splitEnglishWords[k].trim();
-                    var jap_word = entry.Kanji.trim();
-                    if (eng_words.length == 0 || jap_word.length == 0)
-                        continue;
-                    var o = {eng: eng_words, jap: jap_word};
-                    importedVocabDictionary.push(o);
-                }
-            })
-            allImportedVocabDictionaries[public_spreadsheet_key + ' - ' + sheet_name] = importedVocabDictionary;
-            console.log("Imported vocab entries: " + Object.keys(importedVocabDictionary).length);
-        }
-    
         return true;
     });
 }
 
 // ------------------------------------------------------------------------------------------------
-function deleteCacheVocabList(key)
+function deleteCacheVocabList(spreadsheet_collection_key, sheet_name)
 {
-    delete allImportedVocabDictionaries[key];
+    var spread_sheet = allImportedVocabDictionaries[spreadsheet_collection_key];
+    delete spread_sheet[sheet_name];
     saveAllImported();
 }
 
@@ -107,11 +138,11 @@ function saveAllImported() {
     //$row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
 
     // Retrieve the entire list.
-    var googleSpreadSheetList = $('#googleSpreadSheetListTable input:text').map(function() {
-        return $(this).val();
-    }).filter(function(index, value) {
-        return value;
-    }).get();
+    //var googleSpreadSheetList = $('#googleSpreadSheetListTable input:text').map(function() {
+    //    return $(this).val();
+    //}).filter(function(index, value) {
+    //    return value;
+    //}).get();
     
     var obj = {};
     obj["wanikanify_googleVocabKey"] = {
@@ -121,13 +152,10 @@ function saveAllImported() {
         // Delimiter
         // From column
         // Map of data
-        inserted: (new Date()).toJSON(),
-        vocab: allImportedVocabDictionaries
+        collections: allImportedVocabDictionaries
     };
     chrome.storage.local.set(obj, function(data) {
         console.log("Saved google data.");
-        for (var name in data)
-            console.log(name);
         if(chrome.runtime.lastError)
         {
             console.log("Could not save google data.");
@@ -239,6 +267,7 @@ function clear_cache() {
     chrome.storage.local.remove("wanikanify_customvocab");
     // TODO: Clear the text box? Or maybe don't clear custom vocab?
     chrome.storage.local.remove("wanikanify_googleVocabKey");
+    console.log("Cache cleared.");
     $(".alert-success").show();
 }
 
