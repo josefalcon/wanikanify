@@ -1,6 +1,7 @@
 todo:
 
 Get rows to auto populate based on what was saved before.
+Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
 Make sure saving and deleting occurs properly.
 Make sure deleting a row deletes stuff properly.
 Add in progress download indicator for each entry. Could use JQueryUI lib.
@@ -8,8 +9,12 @@ Add in text that tells the user how many entries were imported.
 I want the user to be able to specify whether or not it has a header.
 After each import, save the list of vocab immediately.
 I want the user to be able to specify the columns by number or by the google column identifier (A, B, C, etc.)
-
+If they already imported some data, the import button should change to "reimport?"
+    - If they delete the cache, the button should change back to "import", based on whether or not zero elements have been imported.
 Change everything over to use chrome sync.
     - In each row, I want a status stating how many have been imported.
-
+Figure out what to do when a user changes a text field.
+    - Probably do nothing, and only when they click "import" do we save the metadata.
+Convert all for loops into jquery loops.
+Do validation on all input text boxes.?
 Add in functionality to play the sound when user clicks on it.
