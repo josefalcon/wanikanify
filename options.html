@@ -5,6 +5,9 @@
     <title>Wanikanify Options</title>
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/jquery-ui.min.css" rel="stylesheet">
+    <link href="css/jquery-ui.theme.min.css" rel="stylesheet">
+    <link href="css/jquery-ui.structure.min.css" rel="stylesheet">
     <style type="text/css">
       body {
       padding-top: 20px;
@@ -23,10 +26,16 @@
     <script src="js/jquery.js"></script>
     <script src="js/options.js"></script>
     <script src="js/tabletop.js"></script>
-    
+    <script src="js/jquery-ui.min.js"></script>
   </head>
 
   <body>
+    <div id="google_bad_spreadsheet_data" title="Invalid Spreadsheet Data">
+      <p>Make sure all of the text boxes are filled in and they shouldn't contain any weird characters.</p>
+    </div>
+    <div id="google_failed_import" title="Failed to Import">
+      <p>Failed to import spreadsheet data. Make sure all text fields are absolutely correct.</p>
+    </div>
 
     <div class="container-narrow">
       <div class="masthead">

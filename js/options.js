@@ -62,6 +62,7 @@ function on_google_import(data, tabletop) {
 
         console.log("on_google_import() - Grabbing specific metadata.");
         var mdc = meta_data_collection;
+        var found = false;
         for (var i = 0; i < mdc.length; ++i) {
             if (mdc[i].spreadsheet_collection_key == spreadsheet_collection_key &&
                 mdc[i].sheet_name == sheet_name) {
@@ -72,8 +73,15 @@ function on_google_import(data, tabletop) {
                 console.log("on_google_import() - to_column: " + to_column);
                 console.log("on_google_import() - delim: " + delim);
                 console.log("on_google_import() - from_column: " + from_column);
+                found = true;
                 break;
             }
+        }
+        
+        if (found == false) {
+            $( "#google_failed_import" ).dialog();
+            // TODO: Delete this metadata.
+            return;
         }
 
 
@@ -115,6 +123,17 @@ function on_google_import(data, tabletop) {
 
 // ------------------------------------------------------------------------------------------------
 // DONE
+function input_is_valid(text) {
+    var t = text.trim();
+    if (t === "") {
+        console.log("validate_input() - Failed to validate input: " + text);
+        return false;
+    }
+    return true;
+}
+
+// ------------------------------------------------------------------------------------------------
+// DONE
 // Handler for when the user clicks the "import" button for a particular row.
 // 1) Retrieves the google spreadsheet data for a particular sheet/key combo.
 // 2) Saves the metadata (the data from the gui controls).
@@ -124,15 +143,23 @@ function on_click_import_button() {
 
     // Retrieve metadata from gui elements.
     var row = $(this).closest('tr');
-    var spreadsheet_collection_key = row.find('input[name=spreadsheet_collection_key]').val();
-    var from_column = row.find('input[name=from_col]').val();
-    var delim       = row.find("input[name='delim']").val();
-    var to_column   = row.find('input[name=to_col]').val();
-    var sheet_name  = row.find("input[name='sheet_name']").val();
+    var spreadsheet_collection_key = row.find('input[name=spreadsheet_collection_key]').val().trim();
+    var from_column = row.find('input[name=from_col]').val().trim();
+    var delim       = row.find("input[name='delim']").val().trim();
+    var to_column   = row.find('input[name=to_col]').val().trim();
+    var sheet_name  = row.find("input[name='sheet_name']").val().trim();
     console.log("on_click_import_button() - Grabbed data from gui elements.");
+    
+    // Basic input validation here.
+    if (!input_is_valid(spreadsheet_collection_key) ||
+        !input_is_valid(from_column) ||
+        !input_is_valid(delim) ||
+        !input_is_valid(to_column) ||
+        !input_is_valid(sheet_name)) {
+        $( "#google_bad_spreadsheet_data" ).dialog();
+        return;
+    }
 
-    // Save the metadata.
-    // Tabletop needs the metadata, so we save it so it can access it in the "on_google_import" handler.
     var meta_data = {
         "spreadsheet_collection_key": spreadsheet_collection_key,
         "from_column": from_column,
@@ -140,6 +167,9 @@ function on_click_import_button() {
         "to_column": to_column,
         "sheet_name": sheet_name
     };
+    
+    // Tabletop needs the metadata, so we save it so it can access it in the "on_google_import" handler.
+    // Save the metadata.
     saveGoogleMetadataEntry(meta_data);
     console.log("on_click_import_button() - Saved metadata.");
 
@@ -157,6 +187,7 @@ function on_click_import_button() {
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 // 1) This should delete the row (gui elements)
 // 2) This should delete the saved data in that row (the metadata).
 // 3) This should delete the imported vocab words from this sheet/key combo.
@@ -226,6 +257,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 // TODO: This probably should be changed to not save everything, but just a single sheet.
 // It only saves when the user clicks import or deletes a row.
 function saveAllGoogleImported() {
@@ -282,6 +314,7 @@ function restoreAllGoogleMetadata(items) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
     console.log("deleteGoogleMetadataEntry()");
     console.log("deleteGoogleMetadataEntry() - Spreadsheet collection key: " + spreadsheet_collection_key);
@@ -394,33 +427,24 @@ function saveGoogleMetadataEntry(meta_data) {
 // Saves all the metadata.
 // This data is the same data that's in the GUI elements.
 function saveAllGoogleMetadata() {
-    
-    // TODO: Save spreadsheet key and stuff.
-    // Save the google spreadsheet import settings.
-    //$row.append('<td><input type="text" class="input-medium" name="spreadsheet_key" placeholder="Spreadsheet key" value="' + public_spreadsheet_key + '"></td>');
-    //$row.append('<td><input type="text" class="input-medium" name="from_col_header" placeholder="From column header" value="' + from_column + '"></td>');
-    //$row.append('<td><input type="text" class="input-mini" name="delim" placeholder="Delimiter" value="' + delim + '"></td>');
-    //$row.append('<td><input type="text" class="input-medium" name="to_col_header" placeholder="To column header" value="' + to_column + '"></td>');
-    //$row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
-
-    // Retrieve the entire list.
-    var googleSpreadSheetList = $('#googleSpreadSheetListTable input:text');
-    var stuff2 = googleSpreadSheetList.map(function() {
+    // Retrieves all the text field data in an array. It's also magic.
+    var data = $('#googleSpreadSheetListTable input:text').map(function() {
         return $(this).val();
-    });
-    var stuff3 = stuff2.filter(function(index, value) {
+    }).filter(function(index, value) {
         return value;
-    });
-    var stuff4 = stuff3.get();
-    
-    var meta_data = {
-        "spreadsheet_collection_key": spreadsheet_collection_key,
-        "from_column": from_column,
-        "delim": delim,
-        "to_column": to_column,
-        "sheet_name": sheet_name,
-    };
-    saveGoogleMetadataEntry(meta_data);
+    }).get();
+
+    // HACK: Super silly five.
+    for (var i = 0; i < data.length; i += 5) {
+        var meta_data = {
+            "spreadsheet_collection_key": data[i],
+            "from_column": data[i+1],
+            "delim": data[i+2],
+            "to_column": data[i+3],
+            "sheet_name": data[i+4],
+        };
+        saveGoogleMetadataEntry(meta_data);        
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
