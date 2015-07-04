@@ -1,42 +1,24 @@
 todo:
 
-+Get rows to auto populate based on what was saved before.
-+After each import, save the list of vocab immediately.
-+Make sure clearing cache actually clears the vocab data, but not the metadata.
-+Make sure saving and deleting occurs properly.
-    + metadata: save when user clicks import.
-    + metadata: save when user deletes row.
-    + metadata: save when user clicks "save all".
-    + vocab: saved when user clicks import.
-    + vocab: saved when user deletes row.
-+Make sure deleting a row deletes stuff properly.
-+ Check to see if we already have this data imported.
-    + Save button should also check for duplicates.
-    + NOTE: Don't need to check for duplicates. It wont' matter.
-+Do validation on all input text boxes.
-+Add functionality to actually dump the imported vocab into the master dictionary for replacements.
-
-Upgrade JQuery to remove warning about synchronous xmlhttprequest call being deprecated.
-Fix issue with dialog box text showing up on main page because they're div tags.
-Had some issues with race conditions and saving/loading and importing of data.
-    - Check all importing and saving/loading to make sure there aren't any race conditions.
-
-Show dialog when sheet is incorrect.
-Show dialog when spreadsheet key is incorrect.
-Show dialog when to or from column is incorrect.
-After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
-    - Should also be greyed out upon load.
-Change everything over to use chrome sync.
-    - In each row, I want a status stating how many have been imported.
-Alert the user if import failed for some reason.
 Add in text that tells the user how many entries were imported.
-Play sound when user clicks on a vocab word.
 I want the user to be able to specify the columns by number.
     - I want the user to be able to specify whether or not it has a header.
     - I should be able to do this by iterating through the keys.
     - The user can specify a column index (0 - ?) for both.
         - Validate to make sure row and column are not the same.
+Fix issue with dialog box text showing up on main page because they're div tags.
+After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
+    - Should also be greyed out upon load.
+Play sound when user clicks on a vocab word.
 
+Had some issues with race conditions and saving/loading and importing of data.
+    - Check all importing and saving/loading to make sure there aren't any race conditions.
+Show dialog when sheet is incorrect.
+Show dialog when spreadsheet key is incorrect.
+Show dialog when to or from column is incorrect.
+Change everything over to use chrome sync.
+Alert the user if import failed for some reason.
 Add in progress download indicator for each entry. Could use JQueryUI lib.
 Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
 Convert all for loops into jquery loops.
+Upgrade JQuery to remove warning about synchronous xmlhttprequest call being deprecated.
