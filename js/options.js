@@ -20,40 +20,47 @@ function add_black_list_item(value) {
 
 // ------------------------------------------------------------------------------------------------
 function add_empty_google_spread_sheet_list_item(value) {
+    console.log("add_empty_google_spread_sheet_list_item()");
     // HACK: This is just to auto populate for dev's convenience for now.
     add_google_spread_sheet_list_item(
     "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ";", "Kanji", "6k Pt 1");
 }
 
 // ------------------------------------------------------------------------------------------------
-// Handler for when data has been grabbed from the Google Spreadsheet API.
+// DONE
+// Handler for when data has been grabbed from the Google Spreadsheet API. Called from tabletop.
 function on_google_import(data, tabletop) {
-   
+    console.log("on_google_import()");
+
     var spreadsheet_collection_key = data[Object.keys(data)[0]].tabletop.key;
-    // Only one sheet at a time.
+    // We only support one sheet at a time.
     var sheet_name = data[Object.keys(data)[0]].name;
-    var delim = {};
-    var from_column = {};
-    var to_column = {};
 
     // Perform a lookup into the metadata to see what the columns and delimiters are.
     // When they clicked "import", the metadata was saved for that entry,
     // so we just grab it from the cache.
     chrome.storage.local.get("wanikanify_googleVocab_meta", function(items) {
+        var delim = {};
+        var from_column = {};
+        var to_column = {};
+
         // If the main metadata object doesn't exist yet, create one.
+        console.log("on_google_import() - Grabbing metadata object");
         var meta_data_container = items.wanikanify_googleVocab_meta;
         if (!meta_data_container) {
-            console.log("No main Google Vocab Metadata object called: " + spreadsheet_collection_key);
+            console.log("on_google_import() - No main Google Vocab Metadata object called: " + spreadsheet_collection_key);
             return;
         }
         
+        console.log("on_google_import() - Grabbing metadata collection.");
         var meta_data_collection = [];
         meta_data_collection = meta_data_container["meta_data_collection"];
         if (!meta_data_collection) {
-            console.log("No main array found inside of main Google Vocab Metadata object.");
+            console.log("on_google_import() - No main array found inside of main Google Vocab Metadata object.");
             return;
         }
 
+        console.log("on_google_import() - Grabbing specific metadata.");
         var mdc = meta_data_collection;
         for (var i = 0; i < mdc.length; ++i) {
             if (mdc[i].spreadsheet_collection_key == spreadsheet_collection_key &&
@@ -61,48 +68,61 @@ function on_google_import(data, tabletop) {
                 delim = mdc[i].delim;
                 from_column = mdc[i].from_column;
                 to_column = mdc[i].to_column;
-                return;
+                console.log("on_google_import() - Found metadata: ");
+                console.log("on_google_import() - to_column: " + to_column);
+                console.log("on_google_import() - delim: " + delim);
+                console.log("on_google_import() - from_column: " + from_column);
+                break;
             }
         }
-    });
 
-    // Parse table data and dump into an array.
-    // For each spreadsheet. (Just one, since we only do one at a time.)
-    var importedVocabArray = [];
-    var sheets = tabletop.sheets(sheet_name).all();
-    $.each(sheets, function(key, entry) {
-        // Split up the english words by the delimiter (comma?).
-        var splitEnglishWords = entry[from_column].split(delim);
-        for (k = 0; k < splitEnglishWords.length; k++) {
-            var eng_words = splitEnglishWords[k].trim();
-            var jap_word = entry[to_column].trim();
-            if (eng_words.length == 0 || jap_word.length == 0)
-                continue;
-            var o = {eng: eng_words, jap: jap_word};
-            importedVocabArray.push(o);
+
+        // Parse table data and dump into an array.
+        // For each spreadsheet. (Just one, since we only do one at a time.)
+        console.log("on_google_import() - Parsing data...");
+        var importedVocabArray = [];
+        var sheets = tabletop.sheets(sheet_name).all();
+        $.each(sheets, function(key, entry) {
+            // Split up the english words by the delimiter (comma?).
+            var splitEnglishWords = entry[from_column].split(delim);
+            for (k = 0; k < splitEnglishWords.length; k++) {
+                var eng_words = splitEnglishWords[k].trim();
+                var jap_word = entry[to_column].trim();
+                if (eng_words.length == 0 || jap_word.length == 0)
+                    continue;
+                var o = {eng: eng_words, jap: jap_word};
+                importedVocabArray.push(o);
+            }
+        })
+
+        // Dump array of data into the master dictionary.
+        // Grab the spreadsheet object.
+        console.log("on_google_import() - Dumping parsed data into master dictionary...");
+        var all_sheets = allImportedVocabDictionaries[spreadsheet_collection_key];
+        if (!all_sheets) {
+            // No entry for this spreadsheet.
+            // Create an empty spreadsheet object.
+            var sheets = {};
+            allImportedVocabDictionaries[spreadsheet_collection_key] = sheets;
+            all_sheets = allImportedVocabDictionaries[spreadsheet_collection_key];
         }
-    })
+        // Add or replace vocab to this particular sheet.
+        all_sheets[sheet_name] = importedVocabArray;
 
-    // Dump array of data into the master dictionary.
-    // Grab the spreadsheet object.
-    var all_sheets = allImportedVocabDictionaries[spreadsheet_collection_key];
-    if (!all_sheets) {
-        // No entry for this spreadsheet.
-        // Create an empty spreadsheet object.
-        var sheets = {};
-        allImportedVocabDictionaries[spreadsheet_collection_key] = sheets;
-        all_sheets = allImportedVocabDictionaries[spreadsheet_collection_key];
-    }
-    // Add or replace vocab to this particular sheet.
-    all_sheets[sheet_name] = importedVocabArray;
-
-    console.log("Imported " + importedVocabArray.length + " from " + sheet_name +
-                " in collection " + spreadsheet_collection_key);
+        console.log("Imported " + importedVocabArray.length + " from " + sheet_name +
+                    " in collection " + spreadsheet_collection_key);
+    });
 }
 
 // ------------------------------------------------------------------------------------------------
-function on_click_import_button()
-{
+// DONE
+// Handler for when the user clicks the "import" button for a particular row.
+// 1) Retrieves the google spreadsheet data for a particular sheet/key combo.
+// 2) Saves the metadata (the data from the gui controls).
+// 3) Saves the imported google spreadsheet data to local cache.
+function on_click_import_button() {
+    console.log("on_click_import_button()");
+
     // Retrieve metadata from gui elements.
     var row = $(this).closest('tr');
     var spreadsheet_collection_key = row.find('input[name=spreadsheet_collection_key]').val();
@@ -110,8 +130,10 @@ function on_click_import_button()
     var delim       = row.find("input[name='delim']").val();
     var to_column   = row.find('input[name=to_col]').val();
     var sheet_name  = row.find("input[name='sheet_name']").val();
+    console.log("on_click_import_button() - Grabbed data from gui elements.");
 
-    // Tabletop needs this data, so we save it so it can access it.
+    // Save the metadata.
+    // Tabletop needs the metadata, so we save it so it can access it in the "on_google_import" handler.
     var meta_data = {
         "spreadsheet_collection_key": spreadsheet_collection_key,
         "from_column": from_column,
@@ -120,40 +142,55 @@ function on_click_import_button()
         "sheet_name": sheet_name
     };
     saveGoogleMetadataEntry(meta_data);
+    console.log("on_click_import_button() - Saved metadata.");
 
-    // Import the data.
+    // Import the data and save it.
+    console.log("on_click_import_button() - Importing google data.");
     Tabletop.init( { key: spreadsheet_collection_key,
                      callback: on_google_import,
                      wanted: [sheet_name],
                      debug: true } );
 
     saveAllGoogleImported();
+    console.log("on_click_import_button() - Saved google data.");
 
     return true;
 }
 
 // ------------------------------------------------------------------------------------------------
+// 1) This should delete the row (gui elements)
+// 2) This should delete the saved data in that row (the metadata).
+// 3) This should delete the imported vocab words from this sheet/key combo.
 function on_click_remove_item_button() {
+    console.log("on_click_remove_item_button()");
+
+    console.log("on_click_remove_item_button() - Finding row...");
     var row = $(this).closest('tr');
     var spreadsheet_collection_key = row.find('input[name=spreadsheet_collection_key]').val();
     var sheet_name = row.find('input[name=sheet_name]').val();
 
-    var spread_sheet = allImportedVocabDictionaries[spreadsheet_collection_key];
-    // Delete the imported data, if it was imported.
-    if (spread_sheet) {
-        delete spread_sheet[sheet_name];
-        saveAllImported();
+    console.log("on_click_remove_item_button() - Deleting vocab data.");
+    var spread_sheets = allImportedVocabDictionaries[spreadsheet_collection_key];
+    // 3) Delete the imported data, if it was imported.
+    if (spread_sheets) {
+        delete spread_sheets[sheet_name];
+        console.log("on_click_remove_item_button() - Deleted vocab data.");
+        saveAllGoogleImported();
     }
 
-    // Delete the saved metadata.
+    console.log("on_click_remove_item_button() - Deleting metadata for this entry.");
+    // 2) Delete the saved metadata.
     deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name);
     
-    // Delete the gui elements.
+    // 1) Delete the gui elements.
     $(this).closest('tr').unbind().remove();
+    console.log("on_click_remove_item_button() - Deleted gui elements.");
     return true;
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
+// Creates a row in the gui so the user can fill it in. Also hooks up the handlers for the buttons.
 // spreadsheet_collection_key: The unique id for the spreadsheet collection (found in the url).
 // sheet_name: A single spreadsheet name. A spreadsheet collection can have multiple sheets.
 function add_google_spread_sheet_list_item(spreadsheet_collection_key,
@@ -161,6 +198,13 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
                                            delim,
                                            to_column,
                                            sheet_name) {
+    console.log("add_google_spread_sheet_list_item()");
+    console.log("add_google_spread_sheet_list_item() - " + spreadsheet_collection_key);
+    console.log("add_google_spread_sheet_list_item() - " + from_column);
+    console.log("add_google_spread_sheet_list_item() - " + delim);
+    console.log("add_google_spread_sheet_list_item() - " + to_column);
+    console.log("add_google_spread_sheet_list_item() - " + sheet_name);
+    
     var $googleSpreadSheetListTable = $('#googleSpreadSheetListTable > tbody:last');
     $googleSpreadSheetListTable.append('<tr></tr>');
     // Grab the last row element.
@@ -173,8 +217,10 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     $row.append('<td><button class="btn btn-success pull-right importGoogleSpreadSheetData" type="button">Import Data</button></td>');
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
 
-    $('.removeGoogleSpreadSheetListItem:last').click(on_click_remove_item_button);    
+    $('.removeGoogleSpreadSheetListItem:last').click(on_click_remove_item_button);
     $('.importGoogleSpreadSheetData:last').click(on_click_import_button);
+    
+    // Note: If they click the import, remove, or save, the metadata gets saved.
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -195,44 +241,55 @@ function saveAllGoogleImported() {
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 function restoreAllGoogleImported(items) {
+    console.log("restoreAllGoogleImported()");
     var data = items.wanikanify_googleVocabKey;
     if (!data) {
-        console.log("No Google data to load.");
+        console.log("restoreAllGoogleImported() - No Google data to load.");
         return;
     }
-    allImportedVocabDictionaries = data;
-    console.log("Loaded Google data.");
+    allImportedVocabDictionaries = data.collections;
+    console.log("restoreAllGoogleImported() - Loaded Google data.");
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
+// This rebuilds the google import rows based on what's in storage.
 function restoreAllGoogleMetadata(items) {
+    console.log("restoreAllGoogleMetadata()");
     var meta_data = items.wanikanify_googleVocab_meta;
     if (!meta_data) {
+        console.log("restoreAllGoogleMetadata() - No metadata to restore.");
         return;
     }
 
-    var d = meta_data.data;
-    for (var i = 0; i < meta_data.length; ++i) {
+    var d = meta_data.meta_data_collection;
+    console.log("restoreAllGoogleMetadata() - Restoring: " + d.length + " sheets.");
+    for (var i = 0; i < d.length; ++i) {
+        console.log("restoreAllGoogleMetadata() - Restoring: " + d[i].spreadsheet_collection_key + ", " + d[i].sheet_name);
         // TODO: Compute number of items.
         var item_count = 5000;
-        add_google_spread_sheet_list_item(meta_data[i].spreadsheet_collection_key,
-                                          meta_data[i].from_column,
-                                          meta_data[i].delim,
-                                          meta_data[i].to_column,
-                                          meta_data[i].sheet_name);
+        add_google_spread_sheet_list_item(d[i].spreadsheet_collection_key,
+                                          d[i].from_column,
+                                          d[i].delim,
+                                          d[i].to_column,
+                                          d[i].sheet_name);
                                           // TODO: Item count.
     }
 }
 
 // ------------------------------------------------------------------------------------------------
 function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
+    console.log("deleteGoogleMetadataEntry()");
+    console.log("deleteGoogleMetadataEntry() - Spreadsheet collection key: " + spreadsheet_collection_key);
+    console.log("deleteGoogleMetadataEntry() - Sheet name: " + sheet_name);
     // Retrieve the main metadata object from cache.
     chrome.storage.local.get("wanikanify_googleVocab_meta", function(items) {
         // If the main metadata object doesn't exist yet, bail.
         var meta_data_container = items.wanikanify_googleVocab_meta;
         if (!meta_data_container) {
-            console.log("No main Google Vocab Metadata object found in cache.");
+            console.log("deleteGoogleMetadataEntry() - No main Google Vocab Metadata object found in cache.");
             return;
         }
 
@@ -241,7 +298,7 @@ function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
         var meta_data_collection = [];
         meta_data_collection = meta_data_container["meta_data_collection"];
         if (!meta_data_collection) {
-            console.log("No main array found inside of main Google Vocab Metadata object.");
+            console.log("deleteGoogleMetadataEntry() - No main array found inside of main Google Vocab Metadata object.");
             return;
         }
 
@@ -250,15 +307,17 @@ function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
             if (meta_data_collection[md].spreadsheet_collection_key == spreadsheet_collection_key &&
                 meta_data_collection[md].sheet_name == sheet_name) {
                     delete meta_data_collection[md];
+                    console.log("deleteGoogleMetadataEntry() - Deleted metata entry.");
                     break;
             }
         }
 
         // Save the main meta data object out to chrome storage with the deleted metadata entry.
+        console.log("deleteGoogleMetadataEntry() - Resaving all metadata.");
         chrome.storage.local.set(meta_data_container, function(data) {
             if(chrome.runtime.lastError)
             {
-                console.log("Could not save Google metadata.");
+                console.log("deleteGoogleMetadataEntry() - Could not save Google metadata.");
                 return;
             }
         });
@@ -266,13 +325,17 @@ function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 function saveGoogleMetadataEntry(meta_data) {
+    console.log("saveGoogleMetadataEntry()");
+    console.log("saveGoogleMetadataEntry() - Attempting to save: " + meta_data.spreadsheet_collection_key + ", " + meta_data.sheet_name);
+    
     // Retrieve the main metadata object from cache.
     chrome.storage.local.get("wanikanify_googleVocab_meta", function(items) {
         // If the main metadata object doesn't exist yet, create one.
         var meta_data_container = items.wanikanify_googleVocab_meta;
         if (!meta_data_container) {
-            console.log("No main Google Vocab Metadata object found in cache.");
+            console.log("saveGoogleMetadataEntry() - No main Google Vocab Metadata object found in cache.");
             meta_data_container = {};
         }
 
@@ -281,17 +344,19 @@ function saveGoogleMetadataEntry(meta_data) {
         var meta_data_collection = [];
         meta_data_collection = meta_data_container["meta_data_collection"];
         if (!meta_data_collection) {
-            console.log("No main array found inside of main Google Vocab Metadata object.");
+            console.log("saveGoogleMetadataEntry() - No main array found inside of main Google Vocab Metadata object.");
             meta_data_container["meta_data_collection"] = meta_data_collection;
         }
 
         // See if we already have this key/sheet name combo in the list.
+        console.log("saveGoogleMetadataEntry() - Searching for metadata entry.");
         var found = false;
         var found_data = {};
         for (md in meta_data_collection) {
             if (meta_data_collection[md].spreadsheet_collection_key ==
                 meta_data.spreadsheet_collection_key &&
                 meta_data_collection[md].sheet_name == meta_data.sheet_name) {
+                    console.log("saveGoogleMetadataEntry() - Found metadata entry.");
                     found = true;
                     found_data = meta_data_collection[md];
                     break;
@@ -301,28 +366,25 @@ function saveGoogleMetadataEntry(meta_data) {
         // If it's already in the list, just update the data,
         // otherwise add a new metadata entry.
         if (!found) {
-            console.log("No metadata entry found for: ");
+            console.log("saveGoogleMetadataEntry() - No metadata entry found for: " + meta_data.spreadsheet_collection_key + ", " + meta_data.sheet_name);
             meta_data_collection.push(meta_data);
         } else {
-            console.log("Updating metadata entry: ");
+            console.log("saveGoogleMetadataEntry() - Updating metadata entry: " + meta_data.spreadsheet_collection_key + ", " + meta_data.sheet_name);
             found_data = meta_data;
         }
-        console.log(meta_data.spreadsheet_collection_key);
-        console.log(meta_data.sheet_name);
 
         // Save the main meta data object out to chrome storage with the newly updated metadata entry.
         chrome.storage.local.set(meta_data_container, function(data) {
-            console.log("Saved Google metadata named: ");
-            console.log("Spreadsheet Collection Key: " + found_data.spreadsheet_collection_key);
-            console.log("Spreadsheet Name: " + found_data.sheet_name)
+            console.log("saveGoogleMetadataEntry() - Saved Google metadata entry.");
             if(chrome.runtime.lastError)
             {
-                console.log("Could not save Google metadata.");
+                console.log("saveGoogleMetadataEntry() - Could not save Google metadata.");
                 return;
             }
         });
     });
 }
+
 // ------------------------------------------------------------------------------------------------
 // Saves the metadata.
 // This data is the same data that's in the GUI elements.
@@ -357,7 +419,9 @@ function saveAllGoogleMetadata() {
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 function save_options() {
+    console.log("save_options()");
     var apiKey = $("#apiKey").val();
     if (!apiKey) {
         $("#apiKeyControl").addClass("error");
@@ -387,16 +451,23 @@ function save_options() {
 
     chrome.storage.local.set({"wanikanify_blackList":blackList});
 
+    console.log("save_options() - Saving google metadata.");
+    // There's the possibility the user didn't import any data.
+    // In this case, we want to save their settings anyways.
     saveAllGoogleMetadata();
-    saveAllGoogleImported();
+    // No need to save the actual imported data, it's already saved if it's imported.
+    //saveAllGoogleImported();
     
+    console.log("save_options() - Saving custom vocab.");
     // Save the custom vocab data.
     var customVocab = $("#customVocab").val();
     chrome.storage.local.set({"wanikanify_customvocab":customVocab});
 }
 
 // ------------------------------------------------------------------------------------------------
+// DONE
 function restore_options() {
+    console.log("restore_options()");
     chrome.storage.local.get([
         "wanikanify_apiKey",
         "wanikanify_runOn",
@@ -434,12 +505,17 @@ function restore_options() {
                 add_black_list_item(value);
             });
 
+            console.log("restore_options() - Restoring custom vocab.");
             var customVocab = items.wanikanify_customvocab;
             if (customVocab) {
                 $("#customVocab").val(customVocab);
             }
-            
+
+            // We restore metadata after the vocab data so we can populate
+            // the "imported count" field on the gui.
+            console.log("restore_options() - Restoring all imported google data.");
             restoreAllGoogleImported(items);
+            console.log("restore_options() - Restoring all google metadata.");
             restoreAllGoogleMetadata(items);
         }
     );
@@ -447,6 +523,7 @@ function restore_options() {
 
 // ------------------------------------------------------------------------------------------------
 function clear_cache() {
+    console.log("clear_cache()");
     chrome.storage.local.remove("wanikanify_vocab");
     chrome.storage.local.remove("wanikanify_customvocab");
     // TODO: Clear the text box? Or maybe don't clear custom vocab?
