@@ -256,9 +256,8 @@ function buildDictionaryCallback(vocabDictionary) {
     return function(str) {
         var translation = vocabDictionary[str.toLowerCase()];
         if (translation) {
-            var kanji = translation;
             var reading = "ねこ";
-            var audio_javascript = "var audio = new Audio(\'http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=" + kanji + "&kana=" + reading + "'); audio.play();";
+            var audio_javascript = "var audio = new Audio(\'http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=" + translation + "&kana=" + reading + "'); audio.play();";
             return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + translation +
                 '" onClick="' + audio_javascript + '" var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t; ">' + translation + '<\/span>';
 //            return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + translation +
