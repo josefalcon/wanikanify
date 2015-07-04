@@ -9,6 +9,7 @@ var SRS_KEY        = "wanikanify_srs";
 var API_KEY        = "wanikanify_apiKey";
 var CUST_VOCAB_KEY = "wanikanify_customvocab";
 var GOOG_VOCAB_KEY = "wanikanify_googleVocabKey"
+var GOOG_VOCAB_META_KEY = "wanikanify_googleVocab_meta"
 
 // filter map
 var FILTER_MAP = {
@@ -19,6 +20,7 @@ var FILTER_MAP = {
     "burned":      function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "burned"; }
 };
 
+// ------------------------------------------------------------------------------------------------
 // The main program driver.
 // main : Object ->
 function main(cache) {
@@ -27,44 +29,113 @@ function main(cache) {
         console.error("No API key provided! Please use the options page to specify your API key.");
     }
 
-    // FIX: No wanikani will cause all other features to not work since it bails here.
-    var vocabList = tryCacheOrWaniKani(cache, apiKey);
-    if (!vocabList || vocabList.length == 0) {
-        return; // nothing to do.
-    }
-
-    var filteredList = filterVocabList(vocabList, getFilters(cache));
-    var vocabDictionary = toDictionary(filteredList);
+    var vocabDictionary = {};
+    importWaniKaniVocab(vocabDictionary, cache, apiKey);
+    console.log("Total entries from WaniKani: " + Object.keys(vocabDictionary).length);
+    importCustomVocab(vocabDictionary, cache);
+    console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
+    importGoogleVocab(vocabDictionary, cache);
+    console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
     var dictionaryCallback = buildDictionaryCallback(vocabDictionary);
-
-    // Dump in the custom vocabulary words, overriding the wanikani entries.
-    var ENTRY_DELIM = "\n";
-    var ENG_JAP_COMBO_DELIM = ";";
-    var ENG_VOCAB_DELIM = ",";
-    var customVocab = cache[CUST_VOCAB_KEY];
-    if (customVocab && customVocab.length > 0) {
-        // Explode entire list into sets of englishwords and japanese combinations.
-        var splitList = customVocab.split(ENTRY_DELIM);
-        for (i = 0; i < splitList.length; i++) {
-            // Explode each entry into english words and Kanji.
-            var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
-            var kanjiVocabWord = splitEntry[1].trim();
-            for (j = 0; j < splitEntry.length; j++) {
-                var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
-                for (k = 0; k < splitEnglishWords.length; k++) {
-                    // If it already exists, it gets replaced.
-                    vocabDictionary[splitEnglishWords[k]] = kanjiVocabWord.trim();
-                }
-            }
-        }
-    }
-
-    
-    console.log(Object.keys(vocabDictionary).length);
 
     $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
 }
 
+// ------------------------------------------------------------------------------------------------
+function importWaniKaniVocab(vocabDictionary, cache, apiKey) {
+    var waniKaniVocabList = tryCacheOrWaniKani(cache, apiKey);
+    if (waniKaniVocabList && waniKaniVocabList.length > 0) {
+        var filteredList = filterVocabList(waniKaniVocabList, getFilters(cache));
+        var d = toDictionary(filteredList);
+        // This could be slow...
+        for (key in d) {
+            vocabDictionary[key] = d[key];
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Dump in the custom vocabulary words, overriding the wanikani entries.
+function importCustomVocab(vocabDictionary, cache) {
+    var ENTRY_DELIM = "\n";
+    var ENG_JAP_COMBO_DELIM = ";";
+    var ENG_VOCAB_DELIM = ",";
+    var customVocab = cache[CUST_VOCAB_KEY];
+    if (!customVocab || customVocab.length == 0) {
+        return;
+    }
+
+    // Explode entire list into sets of englishwords and japanese combinations.
+    var splitList = customVocab.split(ENTRY_DELIM);
+    for (var i = 0; i < splitList.length; ++i) {
+        // Explode each entry into english words and Kanji.
+        var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
+        var kanjiVocabWord = splitEntry[1].trim();
+        for (var j = 0; j < splitEntry.length; ++j) {
+            var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
+            for (var k = 0; k < splitEnglishWords.length; ++k) {
+                // If it already exists, it gets replaced.
+                var engVocabWord = splitEnglishWords[k].trim();
+                vocabDictionary[engVocabWord] = kanjiVocabWord;
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Get the correct delimeter for this sheet/key combo.
+function getDelim(meta_data_collection, spreadsheet_collection_key, sheet_name) {
+    for (var i = 0; i < meta_data_collection.length; ++i) {
+        if (meta_data_collection[i].spreadsheet_collection_key == spreadsheet_collection_key &&
+            meta_data_collection[i].sheet_name == sheet_name) {
+                return meta_data_collection[i].delim;
+        }
+    }
+    console.error("Could not find key/sheet combo in metadata for: " + spreadsheet_collection_key + " " + sheet_name);
+    return ",";
+}
+
+// ------------------------------------------------------------------------------------------------
+function importGoogleVocab(vocabDictionary, cache) {
+    var googleVocab = cache[GOOG_VOCAB_KEY];
+    if (!googleVocab || googleVocab.collections.length == 0) {
+        return;
+    }
+
+    var metaData = cache[GOOG_VOCAB_META_KEY];
+    if (!metaData) {
+        return;
+    }
+
+    // We have multiple collections.
+    // Each collection can contain multiple sheets.
+    // Each sheet contains multiple entries of english words -> japanese mappings.
+    // Each entry needs to be split up into multiple synonyms.
+    var collections = googleVocab.collections;
+    // For each collection.
+    for (spreadsheet_collection_key in collections) {
+        var sheets = collections[spreadsheet_collection_key];
+        // For each sheet in that collection.
+        for (sheet_name in sheets) {
+            var delim = getDelim(metaData["meta_data_collection"], spreadsheet_collection_key, sheet_name);
+            // For each entry in that sheet.
+            for (var i = 0; i < sheets[sheet_name].length; ++i) {
+                var entry = sheets[sheet_name][i];
+                var splitEnglishWords = entry.eng.split(delim);
+                // For each english synonym.
+                for (k = 0; k < splitEnglishWords.length; k++) {
+                    var eng_word = splitEnglishWords[k].trim();
+                    var jap_word = entry.jap.trim();
+                    if (eng_word.length == 0 || jap_word.length == 0)
+                        continue;
+                    vocabDictionary[eng_word] = jap_word;
+                }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
 // Returns the filters to use for vocab filtering
 // getFilters: Object -> [Function]
 function getFilters(cache) {
@@ -77,6 +148,7 @@ function getFilters(cache) {
     return [];
 }
 
+// ------------------------------------------------------------------------------------------------
 // Returns a dictionary from String -> String.
 // tryCacheOrWaniKani : Object, String -> Object
 function tryCacheOrWaniKani(cache, apiKey) {
@@ -99,6 +171,7 @@ function tryCacheOrWaniKani(cache, apiKey) {
     return waniKaniList;
 }
 
+// ------------------------------------------------------------------------------------------------
 // Returns a [Object] of vocabulary words from WaniKani
 // tryWaniKani : String, Boolean -> [Object]
 function tryWaniKani(apiKey, async) {
@@ -128,6 +201,7 @@ function tryWaniKani(apiKey, async) {
     return info;
 }
 
+// ------------------------------------------------------------------------------------------------
 // Caches a given [Object] of vocabulary words with an inserted date
 // cacheVocabList: [Object] ->
 function cacheVocabList(vocabList) {
@@ -140,6 +214,7 @@ function cacheVocabList(vocabList) {
     chrome.storage.local.set(obj);
 }
 
+// ------------------------------------------------------------------------------------------------
 // Filters the given [Object] of vocabulary words with the given list of filters.
 // filterVocabList : [Object], [Function] -> [Object]
 function filterVocabList(vocabList, filters) {
@@ -153,6 +228,7 @@ function filterVocabList(vocabList, filters) {
     });
 }
 
+// ------------------------------------------------------------------------------------------------
 // Converts a list of vocab words to a dictionary.
 // toDictionary : [Object] -> Object
 function toDictionary(vocabList) {
@@ -173,6 +249,7 @@ function toDictionary(vocabList) {
     return vocab;
 }
 
+// ------------------------------------------------------------------------------------------------
 // Creates a closure on the given dictionary.
 // buildDictionaryCallback : Object -> (function(String) -> String)
 function buildDictionaryCallback(vocabDictionary) {
@@ -188,4 +265,4 @@ function buildDictionaryCallback(vocabDictionary) {
 }
 
 // kick off the program
-chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_KEY], main);
+chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_KEY, GOOG_VOCAB_META_KEY], main);

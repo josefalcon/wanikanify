@@ -23,7 +23,7 @@ function add_empty_google_spread_sheet_list_item(value) {
     console.log("add_empty_google_spread_sheet_list_item()");
     // HACK: This is just to auto populate for dev's convenience for now.
     add_google_spread_sheet_list_item(
-    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ";", "Kanji", "6k Pt 1");
+    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "6k Pt 1");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -118,6 +118,9 @@ function on_google_import(data, tabletop) {
 
         console.log("Imported " + importedVocabArray.length + " from " + sheet_name +
                     " in collection " + spreadsheet_collection_key);
+
+        saveAllGoogleImported();
+        console.log("on_click_import_button() - Saved google data.");
     });
 }
 
@@ -179,9 +182,6 @@ function on_click_import_button() {
                      callback: on_google_import,
                      wanted: [sheet_name],
                      debug: true } );
-
-    saveAllGoogleImported();
-    console.log("on_click_import_button() - Saved google data.");
 
     return true;
 }

@@ -14,8 +14,13 @@ todo:
     + Save button should also check for duplicates.
     + NOTE: Don't need to check for duplicates. It wont' matter.
 +Do validation on all input text boxes.
++Add functionality to actually dump the imported vocab into the master dictionary for replacements.
 
-Add functionality to actually dump the imported vocab into the master dictionary for replacements.
+Upgrade JQuery to remove warning about synchronous xmlhttprequest call being deprecated.
+Fix issue with dialog box text showing up on main page because they're div tags.
+Had some issues with race conditions and saving/loading and importing of data.
+    - Check all importing and saving/loading to make sure there aren't any race conditions.
+
 Show dialog when sheet is incorrect.
 Show dialog when spreadsheet key is incorrect.
 Show dialog when to or from column is incorrect.
