@@ -256,10 +256,14 @@ function buildDictionaryCallback(vocabDictionary) {
     return function(str) {
         var translation = vocabDictionary[str.toLowerCase()];
         if (translation) {
-//          return '<span class="wanikanified" title="' + str + '" onClick=";">' + translation + '<\/span>'
+            var kanji = translation;
+            var reading = "ねこ";
+            var audio_javascript = "var audio = new Audio(\'http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=" + kanji + "&kana=" + reading + "'); audio.play();";
             return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + translation +
-                '" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + translation + '<\/span>';
-        }
+                '" onClick="' + audio_javascript + '" var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t; ">' + translation + '<\/span>';
+//            return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + translation +
+//                '" onClick="var audio = new Audio(\'http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=猫&kana=ねこ\'); audio.play();　var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t; ">' + translation + '<\/span>';
+                }
         return str;
     }
 }
