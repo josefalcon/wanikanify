@@ -6,7 +6,7 @@ var allImportedVocabDictionaries = {};
 // ------------------------------------------------------------------------------------------------
 function add_black_list_item(value) {
     var $blackListTable = $('#blackListTable > tbody:last');
-    $blackListTable.append('<tr><td><input type="text" class="input-xlarge"><button class="btn btn-danger pull-right removeBlackListItem" type="button">Remove Item</button></td></tr>');
+    $blackListTable.append('<tr><td><input type="text" class="input-xlarge"><button class="btn btn-danger pull-right removeBlackListItem" type="button">Remove Data</button></td></tr>');
 
     if (typeof value === 'string') {
         $('#blackListTable input:last').val(value);
@@ -96,7 +96,6 @@ function on_google_import(data, tabletop) {
         })
 
         // Dump array of data into the master dictionary.
-        // Grab the spreadsheet object.
         console.log("on_google_import() - Dumping parsed data into master dictionary...");
         var all_sheets = allImportedVocabDictionaries[spreadsheet_collection_key];
         if (!all_sheets) {
@@ -174,6 +173,9 @@ function on_click_remove_item_button() {
     // 3) Delete the imported data, if it was imported.
     if (spread_sheets) {
         delete spread_sheets[sheet_name];
+        if (Object.keys(spread_sheets).length == 0) {
+            delete allImportedVocabDictionaries[spreadsheet_collection_key];
+        }
         console.log("on_click_remove_item_button() - Deleted vocab data.");
         saveAllGoogleImported();
     }
@@ -225,7 +227,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
 
 // ------------------------------------------------------------------------------------------------
 // TODO: This probably should be changed to not save everything, but just a single sheet.
-// It only saves when the user clicks import.?
+// It only saves when the user clicks import or deletes a row.
 function saveAllGoogleImported() {
     // Saves the imported vocab data.
     var obj = {};
@@ -306,7 +308,7 @@ function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
         for (md in meta_data_collection) {
             if (meta_data_collection[md].spreadsheet_collection_key == spreadsheet_collection_key &&
                 meta_data_collection[md].sheet_name == sheet_name) {
-                    delete meta_data_collection[md];
+                    meta_data_collection.splice(md, 1);
                     console.log("deleteGoogleMetadataEntry() - Deleted metata entry.");
                     break;
             }
@@ -314,13 +316,15 @@ function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
 
         // Save the main meta data object out to chrome storage with the deleted metadata entry.
         console.log("deleteGoogleMetadataEntry() - Resaving all metadata.");
-        chrome.storage.local.set(meta_data_container, function(data) {
+        var obj = {"wanikanify_googleVocab_meta": meta_data_container};
+        chrome.storage.local.set(obj, function(data) {
+            console.log("deleteGoogleMetadataEntry() - Saved all metadata.");
             if(chrome.runtime.lastError)
             {
                 console.log("deleteGoogleMetadataEntry() - Could not save Google metadata.");
                 return;
             }
-        });
+         });
     });
 }
 
@@ -374,7 +378,8 @@ function saveGoogleMetadataEntry(meta_data) {
         }
 
         // Save the main meta data object out to chrome storage with the newly updated metadata entry.
-        chrome.storage.local.set(meta_data_container, function(data) {
+        var obj = {"wanikanify_googleVocab_meta": meta_data_container};
+        chrome.storage.local.set(obj, function(data) {
             console.log("saveGoogleMetadataEntry() - Saved Google metadata entry.");
             if(chrome.runtime.lastError)
             {
@@ -386,7 +391,7 @@ function saveGoogleMetadataEntry(meta_data) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Saves the metadata.
+// Saves all the metadata.
 // This data is the same data that's in the GUI elements.
 function saveAllGoogleMetadata() {
     
@@ -517,6 +522,9 @@ function restore_options() {
             restoreAllGoogleImported(items);
             console.log("restore_options() - Restoring all google metadata.");
             restoreAllGoogleMetadata(items);
+            
+            // TODO: Do extra verification that the imported vocab and the metadata are
+            // in sync with each other.
         }
     );
 }

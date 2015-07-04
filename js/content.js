@@ -27,6 +27,7 @@ function main(cache) {
         console.error("No API key provided! Please use the options page to specify your API key.");
     }
 
+    // FIX: No wanikani will cause all other features to not work since it bails here.
     var vocabList = tryCacheOrWaniKani(cache, apiKey);
     if (!vocabList || vocabList.length == 0) {
         return; // nothing to do.

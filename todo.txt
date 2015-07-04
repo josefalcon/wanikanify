@@ -1,25 +1,29 @@
 todo:
 
-Get rows to auto populate based on what was saved before.
-Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
-Make sure saving and deleting occurs properly.
-Make sure deleting a row deletes stuff properly.
++Get rows to auto populate based on what was saved before.
++After each import, save the list of vocab immediately.
++Make sure clearing cache actually clears the vocab data, but not the metadata.
+
++Make sure saving and deleting occurs properly.
+    + metadata: save when user clicks import.
+    + metadata: save when user deletes row.
+    + metadata: save when user clicks "save all".
+    + vocab: saved when user clicks import.
+    + vocab: saved when user deletes row.
++Make sure deleting a row deletes stuff properly.
 After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
-Make sure clearing cache actually clears the vocab data, but not the metadata.
-Add in progress download indicator for each entry. Could use JQueryUI lib.
+    - Should also be greyed out upon load.
 Add in text that tells the user how many entries were imported.
-I want the user to be able to specify whether or not it has a header.
-After each import, save the list of vocab immediately.
 I want the user to be able to specify the columns by number or by the google column identifier (A, B, C, etc.)
-If they already imported some data, the import button should change to "reimport?"
-    - If they delete the cache, the button should change back to "import", based on whether or not zero elements have been imported.
+    - I want the user to be able to specify whether or not it has a header.
 Change everything over to use chrome sync.
     - In each row, I want a status stating how many have been imported.
-Figure out what to do when a user changes a text field.
-    - Probably do nothing, and only when they click "import" do we save the metadata.
+Add functionality to actually dump the imported vocab into the master dictionary for replacements.
+Alert the user if import failed for some reason.
+
+Add in progress download indicator for each entry. Could use JQueryUI lib.
+Do validation on all input text boxes.
+Play sound when user clicks on a vocab word.
+Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
 Convert all for loops into jquery loops.
-Do validation on all input text boxes.?
-Add in functionality to play the sound when user clicks on it.
-Get google chrome sync working for metadata and other data.
-Try to get rid of column names needing to be specified. Hopefully we can just make it "A", "B", and just have a checkbox if it has a header row.
-When the user clicks "import", I want the row to say "? # of items imported".
+
