@@ -31,6 +31,8 @@ Had some issues with race conditions and saving/loading and importing of data.
 Show dialog when sheet is incorrect.
 Show dialog when spreadsheet key is incorrect.
 Show dialog when to or from column is incorrect.
+Run tests where I've imported about 6000 vocab words.
+Change is so that "custom vocab box" will override google spreadsheets.
 Change everything over to use chrome sync.
 Alert the user if import failed for some reason.
 Give users of audio the ability to change it from japanese to some other language.
