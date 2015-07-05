@@ -1,5 +1,21 @@
-todo:
+Changelist:
+Clicking on a translated vocab word will cause audio to play using Google TTS.
+    - This doesn't really work if the word is also a link to another site. There isn't really a good way around this.
+    - The correct audio may not play if there are multiple pronunciations.
+    - It plays whatever google says it should play for that word, so I recommend using rikaikun at the same time to make sure the audio is correct.
+User can now import large amounts of vocab words using google spreadsheets.
+    - Importing from Google Spreadsheets overrides the WaniKani vocab.
+    - This allows users to share their vocab lists.
+    - If an update to the spreadsheet occurs, they just have to click the "import" button again.
+User can now override wanikani vocab entries AND "Google spreadsheets import" using the custom vocab box.
+    - Or if they just want to add a few extra vocab words easily, they can also use this.
+    - This is meant as a quick and dirty way to add your own custom vocab easily without setting up a google spreadsheet.
+    - For example, "time" gets translated as "〜回", which is silly. So you can use this to override it to just "回" if you want.
+Settings for wanikanify now are persistence across computers if user has Chrome's sync functionality added.
+    - Note the vocab is not synced because it's too much data. But the settings are synced, so you'll just have to click the "import" buttons again for Google Spreadsheets.
+    - The custom vocab box will be synced, unless there's too much data in it. If sync fails, it's recommended to use Google Spreadsheets instead.
 
+todo:
 Add in text that tells the user how many entries were imported.
 I want the user to be able to specify the columns by number.
     - I want the user to be able to specify whether or not it has a header.
@@ -9,7 +25,6 @@ I want the user to be able to specify the columns by number.
 Fix issue with dialog box text showing up on main page because they're div tags.
 After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
     - Should also be greyed out upon load.
-Play sound when user clicks on a vocab word.
 
 Had some issues with race conditions and saving/loading and importing of data.
     - Check all importing and saving/loading to make sure there aren't any race conditions.
@@ -18,7 +33,9 @@ Show dialog when spreadsheet key is incorrect.
 Show dialog when to or from column is incorrect.
 Change everything over to use chrome sync.
 Alert the user if import failed for some reason.
-Add in progress download indicator for each entry. Could use JQueryUI lib.
+Give users of audio the ability to change it from japanese to some other language.
+?Add in progress download indicator for each entry. Could use JQueryUI lib.
+See if I can fix the audio to use the correct one based on the english meaning, or use the JapanesePod101 audio.
 Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
 Convert all for loops into jquery loops.
 Upgrade JQuery to remove warning about synchronous xmlhttprequest call being deprecated.
