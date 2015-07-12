@@ -1,3 +1,8 @@
+// Todd 07-12-2015: I modified a few places such that, if the user provides an invalid key or sheet name,
+// it still calls the callback, but the "data", will be "undefined." At least we'll get an error stating
+// something went wrong rather than a crash and no indication it failed.
+// I also fixed a bug where it wasn't properly checking for a success, it assumed it threw.
+
 (function(global) {
   "use strict";
 
@@ -176,7 +181,13 @@
       var self = this;
       xhr.onload = function() {
         try {
-          var json = JSON.parse(xhr.responseText);
+          var json = {};
+          // Todd 07-12-2015: Someone assumed that JSON.parse threw if it couldn't parse it, but it doesn't.
+          // It just crashes. xhr.open sets a status field. 200 == good. 404 == file not found.
+          if (xhr.status != 200) {
+              throw "Status was " + xhr.status.toString();
+          }
+          json = JSON.parse(xhr.responseText);
         } catch (e) {
           console.error(e);
         }
@@ -305,6 +316,18 @@
       var i, ilen;
       var toLoad = [];
       this.foundSheetNames = [];
+      
+      // Todd 07-12-2015: I want it to call the callback if it fails to find a sheet or the key is invalid.
+      if (!data) {
+          console.log("No sheets available.");
+          this.doCallback();
+          return;
+      }
+      if (!data.feed) {
+          console.log("No sheets available.");
+          this.doCallback();
+          return;
+      }
 
       for(i = 0, ilen = data.feed.entry.length; i < ilen ; i++) {
         this.foundSheetNames.push(data.feed.entry[i].title.$t);
@@ -332,6 +355,10 @@
       }
 
       this.sheetsToLoad = toLoad.length;
+      // Todd 07-12-2015: I want it to call the callback if it fails to find the sheet we want.
+      if (toLoad.length == 0) {
+        this.doCallback();
+      }
       for(i = 0, ilen = toLoad.length; i < ilen; i++) {
         this.requestData(toLoad[i], this.loadSheet);
       }
@@ -389,9 +416,10 @@
       Tests this.sheetsToLoad just in case a race condition happens to show up
     */
     doCallback: function() {
-      if(this.sheetsToLoad === 0) {
+      // Todd 07-12-2015: I want it to call the callback if it fails in any way.
+      //if(this.sheetsToLoad === 0) {
         this.callback.apply(this.callbackContext || this, [this.data(), this]);
-      }
+      //}
     },
 
     log: function(msg) {

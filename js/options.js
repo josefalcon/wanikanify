@@ -22,13 +22,9 @@ function add_black_list_item(value) {
 function add_empty_google_spread_sheet_list_item(value) {
     console.log("add_empty_google_spread_sheet_list_item()");
     // HACK: This is just to auto populate for dev's convenience for now.
+    //$( "#google_failed_import" ).dialog();
     add_google_spread_sheet_list_item(
     "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "6k Pt 1", 0);
-}
-
-// ------------------------------------------------------------------------------------------------
-function computeNumImportedItems(spreadsheet_collection_key, sheet_name) {
-    return allImportedVocabDictionaries[spreadsheet_collection_key][sheet_name].length;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -36,6 +32,13 @@ function computeNumImportedItems(spreadsheet_collection_key, sheet_name) {
 // This updates the "import count" label. This is totally an insane way of doing it,
 // but I couldn't figure out how to use JQuery to do it properly.
 function update_import_count(spreadsheet_collection_key, sheet_name, count) {
+    // FIX: I think I can just use this, but I'm not sure.
+    //var data = $('#googleSpreadSheetListTable input:text').map(function() {
+    //    return $(this).val();
+    //}).filter(function(index, value) {
+    //    return value;
+    //}).get();
+    
     var elements = $('#googleSpreadSheetListTable > tbody > tr');
     for (var i = 0; i < elements.length; ++i) {
         var children = elements[i].children;
@@ -67,6 +70,12 @@ function update_import_count(spreadsheet_collection_key, sheet_name, count) {
 // Handler for when data has been grabbed from the Google Spreadsheet API. Called from tabletop.
 function on_google_import(data, tabletop) {
     console.log("on_google_import()");
+    
+    // The data failed to import properly.
+    if (!data) {
+        $( "#google_failed_import" ).dialog();
+        return;
+    }
 
     var spreadsheet_collection_key = tabletop.key;
     // We only support one sheet at a time.
@@ -81,14 +90,14 @@ function on_google_import(data, tabletop) {
         var to_column = {};
 
         // If the main metadata object doesn't exist yet, create one.
-        console.log("on_google_import() - Grabbing metadata object");
+        console.log("on_google_import() - Grabbing metadata container from cache.");
         var meta_data_container = items.wanikanify_googleVocab_meta;
         if (!meta_data_container) {
             console.log("on_google_import() - No main Google Vocab Metadata object called: " + spreadsheet_collection_key);
             return;
         }
         
-        console.log("on_google_import() - Grabbing metadata collection.");
+        console.log("on_google_import() - Grabbing metadata collection from container.");
         var meta_data_collection = [];
         meta_data_collection = meta_data_container["meta_data_collection"];
         if (!meta_data_collection) {
@@ -96,7 +105,7 @@ function on_google_import(data, tabletop) {
             return;
         }
 
-        console.log("on_google_import() - Grabbing specific metadata.");
+        console.log("on_google_import() - Grabbing specific metadata from collection.");
         var mdc = meta_data_collection;
         var found = false;
         for (var i = 0; i < mdc.length; ++i) {
@@ -114,12 +123,13 @@ function on_google_import(data, tabletop) {
             }
         }
         
+        // The data was supposed to be saved out to the metadata cache, but we couldn't
+        // find it for some reason. Can't continue.
         if (found == false) {
+            deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name);
             $( "#google_failed_import" ).dialog();
-            // TODO: Delete this metadata.
             return;
         }
-
 
         // Parse table data and dump into an array.
         // For each spreadsheet. (Just one, since we only do one at a time.)
@@ -152,13 +162,13 @@ function on_google_import(data, tabletop) {
         // Add or replace vocab to this particular sheet.
         all_sheets[sheet_name] = importedVocabArray;
 
-        update_import_count(spreadsheet_collection_key, sheet_name, importedVocabArray.length);
-
         console.log("Imported " + importedVocabArray.length + " from " + sheet_name +
                     " in collection " + spreadsheet_collection_key);
 
         saveAllGoogleImported();
         console.log("on_click_import_button() - Saved google data.");
+
+        update_import_count(spreadsheet_collection_key, sheet_name, importedVocabArray.length);
     });
 }
 
@@ -286,7 +296,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     $row.append('<td><input type="text" class="input-mini" name="delim" placeholder="Delimiter" value="' + delim + '"></td>');
     $row.append('<td><input type="text" class="input-medium" name="to_col" placeholder="To column header" value="' + to_column + '"></td>');
     $row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
-    $row.append('<td>Import Count: <div id="import_count">' + count.toString() + '</div></td>');
+    $row.append('<td style="text-align:center">Entries Added <div id="import_count">' + count.toString() + '</div></td>');
     $row.append('<td><button class="btn btn-success pull-right importGoogleSpreadSheetData" type="button">Import Data</button></td>');
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
 
@@ -342,7 +352,18 @@ function restoreAllGoogleMetadata(items) {
     console.log("restoreAllGoogleMetadata() - Restoring: " + d.length + " sheets.");
     for (var i = 0; i < d.length; ++i) {
         console.log("restoreAllGoogleMetadata() - Restoring: " + d[i].spreadsheet_collection_key + ", " + d[i].sheet_name);
-        var item_count = allImportedVocabDictionaries[d[i].spreadsheet_collection_key][d[i].sheet_name].length;
+        
+        // It's possible they created the row, but never imported anything. If that's the case,
+        // there wouldn't be any data saved out and this code would fail.
+        var item_count = 0;
+        var collection = allImportedVocabDictionaries[d[i].spreadsheet_collection_key];
+        if (collection) {
+            var sheet = collection[d[i].sheet_name];
+            if (!sheet) {
+                return;
+            }
+            item_count = sheet.length;
+        }
         add_google_spread_sheet_list_item(d[i].spreadsheet_collection_key,
                                           d[i].from_column,
                                           d[i].delim,
@@ -525,7 +546,6 @@ function save_options() {
     // In this case, we want to save their settings anyways.
     saveAllGoogleMetadata();
     // No need to save the actual imported data, it's already saved if it's imported.
-    //saveAllGoogleImported();
     
     console.log("save_options() - Saving custom vocab.");
     // Save the custom vocab data.

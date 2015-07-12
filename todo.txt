@@ -7,6 +7,7 @@ User can now import large amounts of vocab words using google spreadsheets.
     - Importing from Google Spreadsheets overrides the WaniKani vocab.
     - This allows users to share their vocab lists.
     - If an update to the spreadsheet occurs, they just have to click the "import" button again.
+    - Show the total number of entries that have been imported. Which could be multiple synonyms.
 User can now override wanikani vocab entries AND "Google spreadsheets import" using the custom vocab box.
     - Or if they just want to add a few extra vocab words easily, they can also use this.
     - This is meant as a quick and dirty way to add your own custom vocab easily without setting up a google spreadsheet.
@@ -21,20 +22,25 @@ I want the user to be able to specify the columns by number.
     - I should be able to do this by iterating through the keys.
     - The user can specify a column index (0 - ?) for both.
         - Validate to make sure row and column are not the same.
+    Show dialog when to or from column is incorrect.
 After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
     - Should also be greyed out upon load.
-
+Audio
+    - Give users of audio the ability to use GoogleTTS or JapanesePod101 options.
+    - Give users of audio the ability to change it from japanese to some other language.
+    - See if I can fix the audio to use the correct one based on the english meaning, or use the JapanesePod101 audio.
+    - Figure out how to fetch the reading for a word.
+    - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?id=60108
+    - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
+    - Change custom vocab to include "readings"
+    - Change google spreadsheet stuff to include readings.
+Change everything over to use chrome sync.
+Verify all messaging makes sense and that it's user friendly.
 Had some issues with race conditions and saving/loading and importing of data.
     - Check all importing and saving/loading to make sure there aren't any race conditions.
-Show dialog when sheet is incorrect.
-Show dialog when spreadsheet key is incorrect.
-Show dialog when to or from column is incorrect.
 Run tests where I've imported about 6000 vocab words.
-Change everything over to use chrome sync.
-Alert the user if import failed for some reason.
-Give users of audio the ability to change it from japanese to some other language.
-?Add in progress download indicator for each entry. Could use JQueryUI lib.
-See if I can fix the audio to use the correct one based on the english meaning, or use the JapanesePod101 audio.
+
 Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
+
 Convert all for loops into jquery loops.
 Upgrade JQuery to remove warning about synchronous xmlhttprequest call being deprecated.
