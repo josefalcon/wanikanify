@@ -32,10 +32,10 @@ function main(cache) {
     var vocabDictionary = {};
     importWaniKaniVocab(vocabDictionary, cache, apiKey);
     console.log("Total entries from WaniKani: " + Object.keys(vocabDictionary).length);
-    importCustomVocab(vocabDictionary, cache);
-    console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
     importGoogleVocab(vocabDictionary, cache);
     console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
+    importCustomVocab(vocabDictionary, cache);
+    console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
     var dictionaryCallback = buildDictionaryCallback(vocabDictionary);
 
     $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
