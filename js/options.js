@@ -23,23 +23,12 @@ function add_empty_google_spread_sheet_list_item(value) {
     console.log("add_empty_google_spread_sheet_list_item()");
     // HACK: This is just to auto populate for dev's convenience for now.
     add_google_spread_sheet_list_item(
-    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "6k Pt 1");
+    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "6k Pt 1", 0);
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
-// Update all the "imported count" labels.
-function repopulateAllImportedCountLabels() {
-    var spreadsheet_keys = Object.keys(allImportedVocabDictionaries);
-    for (var i = 0; i < spreadsheet_keys.length; ++i) {
-        var key = spreadsheet_keys[i];
-        var sheet_names = Object.keys(allImportedVocabDictionaries[key]);
-        for (var j = 0; j < sheet_names.length; ++j) {
-            var sheet_name = sheet_names[j];
-            var num_elements = allImportedVocabDictionaries[key][sheet_name].length;
-            update_import_count(key, sheet_name, num_elements);
-        }
-    }
+function computeNumImportedItems(spreadsheet_collection_key, sheet_name) {
+    return allImportedVocabDictionaries[spreadsheet_collection_key][sheet_name].length;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -279,7 +268,8 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
                                            from_column,
                                            delim,
                                            to_column,
-                                           sheet_name) {
+                                           sheet_name,
+                                           count) {
     console.log("add_google_spread_sheet_list_item()");
     console.log("add_google_spread_sheet_list_item() - " + spreadsheet_collection_key);
     console.log("add_google_spread_sheet_list_item() - " + from_column);
@@ -296,7 +286,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     $row.append('<td><input type="text" class="input-mini" name="delim" placeholder="Delimiter" value="' + delim + '"></td>');
     $row.append('<td><input type="text" class="input-medium" name="to_col" placeholder="To column header" value="' + to_column + '"></td>');
     $row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
-    $row.append('<td>Import Count: <div id="import_count">0</div></td>');
+    $row.append('<td>Import Count: <div id="import_count">' + count.toString() + '</div></td>');
     $row.append('<td><button class="btn btn-success pull-right importGoogleSpreadSheetData" type="button">Import Data</button></td>');
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
 
@@ -352,14 +342,13 @@ function restoreAllGoogleMetadata(items) {
     console.log("restoreAllGoogleMetadata() - Restoring: " + d.length + " sheets.");
     for (var i = 0; i < d.length; ++i) {
         console.log("restoreAllGoogleMetadata() - Restoring: " + d[i].spreadsheet_collection_key + ", " + d[i].sheet_name);
-        // TODO: Compute number of items.
-        var item_count = 5000;
+        var item_count = allImportedVocabDictionaries[d[i].spreadsheet_collection_key][d[i].sheet_name].length;
         add_google_spread_sheet_list_item(d[i].spreadsheet_collection_key,
                                           d[i].from_column,
                                           d[i].delim,
                                           d[i].to_column,
-                                          d[i].sheet_name);
-                                          // TODO: Item count.
+                                          d[i].sheet_name,
+                                          item_count);
     }
 }
 
@@ -597,7 +586,6 @@ function restore_options() {
             restoreAllGoogleImported(items);
             console.log("restore_options() - Restoring all google metadata.");
             restoreAllGoogleMetadata(items);
-            repopulateAllImportedCountLabels();
             
             // TODO: Do extra verification that the imported vocab and the metadata are
             // in sync with each other.
