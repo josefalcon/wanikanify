@@ -36,8 +36,11 @@ function main(cache) {
     console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
     importCustomVocab(vocabDictionary, cache);
     console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
-    var dictionaryCallback = buildDictionaryCallback(vocabDictionary);
+    var dictionaryCallback = buildDictionaryCallback(vocabDictionary, cache.wanikanify_vocab.vocabList);
 
+    //var total_num_entries = Object.keys(vocabDictionary).length;
+    //console.log(total_num_entries);
+    //chrome.browserAction.setBadgeText({text: "154"});
     $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
 }
 
@@ -250,16 +253,52 @@ function toDictionary(vocabList) {
 }
 
 // ------------------------------------------------------------------------------------------------
+function getReading(wanikani_vocab_list, kanji) {
+    // Search wanikani for the reading.
+    for (var i = 0; i < wanikani_vocab_list.length; ++i) {
+        if (wanikani_vocab_list[i].character == kanji) {
+            return wanikani_vocab_list[i].kana;
+        }
+    }
+    
+    // TODO: Search google spreadsheets for the reading.
+    
+    // TODO: Search custom vocab for the reading.
+    
+    return "";
+}
+
+// ------------------------------------------------------------------------------------------------
 // Creates a closure on the given dictionary.
 // buildDictionaryCallback : Object -> (function(String) -> String)
-function buildDictionaryCallback(vocabDictionary) {
+function buildDictionaryCallback(vocabDictionary, wanikani_vocab_list) {
     return function(str) {
-        var translation = vocabDictionary[str.toLowerCase()];
-        if (translation) {
-            // https://cloud.google.com/translate/v2/using_rest#language-params
-            // http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
-            return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + translation +
-                '" onClick="var audio = new Audio(\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + translation + '&tl=ja\'); audio.play(); var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + translation + '<\/span>';
+        var kanji = vocabDictionary[str.toLowerCase()];
+        var reading = getReading(wanikani_vocab_list, kanji);
+
+        if (kanji) {
+            var use_jp101 = true;
+            var use_google_tts = false;
+            var audio_url = "";
+            if (use_jp101) {
+                if (reading != "") {
+                    // http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
+                    audio_url = '\'http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=' + kanji + '&kana=' + reading + '\'';
+                } else {
+                    audio_url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + kanji + '&tl=ja' + '\'';
+                }
+            }
+            else {
+                // https://cloud.google.com/translate/v2/using_rest#language-params
+                audio_url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
+            }
+            // TODO: I need to figure out how to default to google if jp101 doesn't have an audio clip for it.
+            // JP101 uses some long default audio clip if it doesn't exist, which is annoying.
+
+            return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
+                '" onmouseover="timer1=setTimeout(function(){var audio = new Audio(' + audio_url + '); audio.play();}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+                // TODO: I want to somehow show a little thing with a definition under it from jisho. Maybe...
+                // window.open(\'http://jisho.org/search/' + kanji + '\');
         }
         return str;
     }

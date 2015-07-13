@@ -15,6 +15,10 @@ User can now override wanikani vocab entries AND "Google spreadsheets import" us
 Settings for wanikanify now are persistence across computers if user has Chrome's sync functionality added.
     - Note the vocab is not synced because it's too much data. But the settings are synced, so you'll just have to click the "import" buttons again for Google Spreadsheets.
     - The custom vocab box will be synced, unless there's too much data in it. If sync fails, it's recommended to use Google Spreadsheets instead.
+Audio
+    - Mousing over a word will play the audio for that word from JP101 or GoogleTTS.
+    - Audio is delayed so it's not annoying.
+    - This works very well as a learning tool with rikaikun because you can use rikaikun as a double check to make sure the audio that was played is correct.
 
 todo:
 I want the user to be able to specify the columns by number.
@@ -27,9 +31,8 @@ After they click "import" or "save", the gui controls need to be greyed out to a
     - Should also be greyed out upon load.
 Audio
     - Give users of audio the ability to use GoogleTTS or JapanesePod101 options.
+    - Fix issue where playing an audio from jp101 results in long "does not exist" audio playing. Need to default back to google tts.
     - Give users of audio the ability to change it from japanese to some other language.
-    - See if I can fix the audio to use the correct one based on the english meaning, or use the JapanesePod101 audio.
-    - Figure out how to fetch the reading for a word.
     - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?id=60108
     - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
     - Change custom vocab to include "readings"
