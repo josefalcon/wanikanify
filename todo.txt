@@ -1,34 +1,37 @@
 Changelist:
-Clicking on a translated vocab word will cause audio to play using Google TTS.
-    - This doesn't really work if the word is also a link to another site. There isn't really a good way around this.
-    - The correct audio may not play if there are multiple pronunciations.
-    - It plays whatever google says it should play for that word, so I recommend using rikaikun at the same time to make sure the audio is correct.
-User can now import large amounts of vocab words using google spreadsheets.
-    - Importing from Google Spreadsheets overrides the WaniKani vocab.
+Importing Google Spreadsheet Data
+    - User can now import large amounts of vocab words using google spreadsheets.
     - This allows users to share their vocab lists.
+    - Importing from Google Spreadsheets overrides the WaniKani vocab.
     - If an update to the spreadsheet occurs, they just have to click the "import" button again.
-    - Show the total number of entries that have been imported. Which could be multiple synonyms.
-User can now override wanikani vocab entries AND "Google spreadsheets import" using the custom vocab box.
-    - Or if they just want to add a few extra vocab words easily, they can also use this.
+    - Shows the total number of entries that have been imported. Which could be multiple synonyms.
+Custom Vocab Override
+    - User can now override WaniKani vocab entries AND "Google spreadsheets import" using the custom vocab box.
+    - Or if they just want to add a few extra vocab words easily, they can also use it for that too.
     - This is meant as a quick and dirty way to add your own custom vocab easily without setting up a google spreadsheet.
-    - For example, "time" gets translated as "〜回", which is silly. So you can use this to override it to just "回" if you want.
-Settings for wanikanify now are persistence across computers if user has Chrome's sync functionality added.
-    - Note the vocab is not synced because it's too much data. But the settings are synced, so you'll just have to click the "import" buttons again for Google Spreadsheets.
-    - The custom vocab box will be synced, unless there's too much data in it. If sync fails, it's recommended to use Google Spreadsheets instead.
+    - For example, "time" gets translated as "〜回" from WaniKani, which is silly. So you can use this to override it to just "回" if you want.
+Google Chrome Sync
+    - Settings for wanikanify now are persistence across computers if user has Chrome's sync functionality enabled.
+    - Note the vocab data is not synced because it's too much data. But the settings are synced, so you'll just have to click the "import" buttons again for Google Spreadsheets.
+    - The custom vocab box will be synced, unless there's too much data in it. The sync could fail if there's too much data in the Custom Vocab text box.
 Audio
     - Mousing over a word will play the audio for that word from JP101 or GoogleTTS.
-    - Audio is delayed so it's not annoying.
-    - This works very well as a learning tool with rikaikun because you can use rikaikun as a double check to make sure the audio that was played is correct.
+    - Audio is delayed slightly so it's not annoying and doesn't cause unnecessary server load.
+    - This works very well as a learning tool with rikaikun.
+    - It's possible the audio played could not be correct if the readings are missing from the spreadsheets.
+        - Without the readings, it has to default to using GoogleTTS.
 
-todo:
+TODO:
 I want the user to be able to specify the columns by number.
-    - I want the user to be able to specify whether or not it has a header.
+    - I want the user to be able to specify whether or not it has a header using a checkbox.
     - I should be able to do this by iterating through the keys.
     - The user can specify a column index (0 - ?) for both.
         - Validate to make sure row and column are not the same.
     Show dialog when to or from column is incorrect.
+
 After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
     - Should also be greyed out upon load.
+
 Audio
     - Give users of audio the ability to use GoogleTTS or JapanesePod101 options.
     - Fix issue where playing an audio from jp101 results in long "does not exist" audio playing. Need to default back to google tts.
@@ -37,7 +40,9 @@ Audio
     - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
     - Change custom vocab to include "readings"
     - Change google spreadsheet stuff to include readings.
+
 Change everything over to use chrome sync.
+
 Verify all messaging makes sense and that it's user friendly.
 Had some issues with race conditions and saving/loading and importing of data.
     - Check all importing and saving/loading to make sure there aren't any race conditions.
