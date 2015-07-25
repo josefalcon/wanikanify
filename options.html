@@ -139,16 +139,17 @@
                 <h4>Custom Vocabulary</h4>
                 <p>
                   You are no longer limited to Wanikani's set of vocabulary and Kanji!</br>
-                  Format: english_word_1,english_word_2, ...;japanese_word_1</br>
-                  Example: cat,feline;猫</br>
-                  Each entry on a separate line. English words and Japanese words are separated by a semicolon.
-                  This also overrides any Wanikani functionality if the default functionality doesn't map well.
-                  This can also be used to map English/Spanish/etc. to any other language if you so choose.
+                  This overrides Wanikani vocab.</br>
+                  Format: eng1,eng2,...;vocab;reading</br>
+                  <strong>Example:</strong> cat,feline;猫;ねこ</br>
+                  Each entry on a separate line.</br>
+                  Pay attention to the commas and semicolons.</br>
+                  The reading is for audio functionality. (optional)</br>
                 </p>
               </td>
               <td></td>
               <td>
-                <textarea rows="10" cols="40" class="input-xlarge" id="customVocab" placeholder="e,e,e;k"></textarea>
+                <textarea rows="10" cols="40" class="input-xlarge" id="customVocab" placeholder="e,e;v;r"></textarea>
               </td>
             </tr>
           </tbody>
@@ -183,6 +184,7 @@
               <li>Removing an entry will also remove it from the cache.</li>
               <li><b>Sheet Name</b>: The sheet name should only contain one sheet in the spreadsheet collection. The name is found at the bottom of the screen and it looks like a tab.</li>
               <li>If you use Google Chrome Sync, these settings will be synced, but THE VOCAB WILL NOT! You will have to reimport them (on the other computer just click "import"). The reason is because it's too much data to sync.</li>
+              <li>The reading column is optional, but highly recommended since GoogleTTS makes mistakes.</li>
           </ol>
         </p>
         <table id="googleSpreadSheetListTable" class="table table-bordered table-striped table-hover">

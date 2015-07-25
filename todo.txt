@@ -33,6 +33,7 @@ After they click "import" or "save", the gui controls need to be greyed out to a
     - Should also be greyed out upon load.
 
 Audio
+    - Put in option to disable the audio functionality.
     - Give users of audio the ability to use GoogleTTS or JapanesePod101 options.
     - Fix issue where playing an audio from jp101 results in long "does not exist" audio playing. Need to default back to google tts.
     - Give users of audio the ability to change it from japanese to some other language.

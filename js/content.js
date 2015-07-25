@@ -269,6 +269,29 @@ function getReading(wanikani_vocab_list, kanji) {
 }
 
 // ------------------------------------------------------------------------------------------------
+function buildAudioUrl(kanji, reading) {
+    if (!kanji)
+        return str;
+    
+    if (!reading) {
+        url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + kanji + '&tl=ja' + '\'';
+    } else {
+        url = fetchWaniKaniAudioURL(reading);
+        if (!url) {
+            url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
+        }
+    }
+    return url;
+}
+
+// ------------------------------------------------------------------------------------------------
+// https://cloud.google.com/translate/v2/using_rest#language-params
+function fetchGoogleTTSURL(word)
+{
+    return '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
+}
+
+// ------------------------------------------------------------------------------------------------
 // Creates a closure on the given dictionary.
 // buildDictionaryCallback : Object -> (function(String) -> String)
 function buildDictionaryCallback(vocabDictionary, wanikani_vocab_list) {
@@ -276,31 +299,13 @@ function buildDictionaryCallback(vocabDictionary, wanikani_vocab_list) {
         var kanji = vocabDictionary[str.toLowerCase()];
         var reading = getReading(wanikani_vocab_list, kanji);
 
-        if (kanji) {
-            var use_jp101 = true;
-            var use_google_tts = false;
-            var audio_url = "";
-            if (use_jp101) {
-                if (reading != "") {
-                    // http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
-                    audio_url = '\'http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=' + kanji + '&kana=' + reading + '\'';
-                } else {
-                    audio_url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + kanji + '&tl=ja' + '\'';
-                }
-            }
-            else {
-                // https://cloud.google.com/translate/v2/using_rest#language-params
-                audio_url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
-            }
-            // TODO: I need to figure out how to default to google if jp101 doesn't have an audio clip for it.
-            // JP101 uses some long default audio clip if it doesn't exist, which is annoying.
-
-            return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-                '" onmouseover="timer1=setTimeout(function(){var audio = new Audio(' + audio_url + '); audio.play();}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
-                // TODO: I want to somehow show a little thing with a definition under it from jisho. Maybe...
-                // window.open(\'http://jisho.org/search/' + kanji + '\');
-        }
-        return str;
+        var url = buildAudioUrl(kanji, reading);
+        if (!url)
+            return str;
+        return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
+            '" onmouseover="timer1=setTimeout(function(){var audio = new Audio(' + audio_url + '); audio.play();}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+            // TODO: I want to somehow show a little thing with a definition under it from jisho. Maybe...
+            // window.open(\'http://jisho.org/search/' + kanji + '\');
     }
 }
 

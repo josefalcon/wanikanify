@@ -24,7 +24,7 @@ function add_empty_google_spread_sheet_list_item(value) {
     // HACK: This is just to auto populate for dev's convenience for now.
     //$( "#google_failed_import" ).dialog();
     add_google_spread_sheet_list_item(
-    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "6k Pt 1", 0);
+    "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "Hiragana", "6k Pt 1", 0);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -114,10 +114,12 @@ function on_google_import(data, tabletop) {
                 delim = mdc[i].delim;
                 from_column = mdc[i].from_column;
                 to_column = mdc[i].to_column;
+                reading_column = mdc[i].reading_column;
                 console.log("on_google_import() - Found metadata: ");
                 console.log("on_google_import() - to_column: " + to_column);
                 console.log("on_google_import() - delim: " + delim);
                 console.log("on_google_import() - from_column: " + from_column);
+                console.log("on_google_import() - reading_column: " + reading_column);
                 found = true;
                 break;
             }
@@ -142,9 +144,10 @@ function on_google_import(data, tabletop) {
             for (k = 0; k < splitEnglishWords.length; k++) {
                 var eng_words = splitEnglishWords[k].trim();
                 var jap_word = entry[to_column].trim();
+                var reading = entry[reading].trim();
                 if (eng_words.length == 0 || jap_word.length == 0)
                     continue;
-                var o = {eng: eng_words, jap: jap_word};
+                var o = {eng: eng_words, jap: jap_word, jap_reading:reading};
                 importedVocabArray.push(o);
             }
         })
@@ -195,10 +198,11 @@ function on_click_import_button() {
     // Retrieve metadata from gui elements.
     var row = $(this).closest('tr');
     var spreadsheet_collection_key = row.find('input[name=spreadsheet_collection_key]').val().trim();
-    var from_column = row.find("input[name='from_col']").val().trim();
-    var delim       = row.find("input[name='delim']").val().trim();
-    var to_column   = row.find("input[name='to_col']").val().trim();
-    var sheet_name  = row.find("input[name='sheet_name']").val().trim();
+    var from_column    = row.find("input[name='from_column']").val().trim();
+    var delim          = row.find("input[name='delim']").val().trim();
+    var to_column      = row.find("input[name='to_column']").val().trim();
+    var reading_column = row.find("input[name='reading_column']").val().trim();
+    var sheet_name     = row.find("input[name='sheet_name']").val().trim();
     console.log("on_click_import_button() - Grabbed data from gui elements.");
     
     // Basic input validation here.
@@ -216,6 +220,7 @@ function on_click_import_button() {
         "from_column": from_column,
         "delim": delim,
         "to_column": to_column,
+        "reading_column": reading_column,
         "sheet_name": sheet_name
     };
     
@@ -278,6 +283,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
                                            from_column,
                                            delim,
                                            to_column,
+                                           reading_column,
                                            sheet_name,
                                            count) {
     console.log("add_google_spread_sheet_list_item()");
@@ -285,6 +291,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     console.log("add_google_spread_sheet_list_item() - " + from_column);
     console.log("add_google_spread_sheet_list_item() - " + delim);
     console.log("add_google_spread_sheet_list_item() - " + to_column);
+    console.log("add_google_spread_sheet_list_item() - " + reading_column);
     console.log("add_google_spread_sheet_list_item() - " + sheet_name);
     
     var $googleSpreadSheetListTable = $('#googleSpreadSheetListTable > tbody:last');
@@ -292,10 +299,11 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     // Grab the last row element.
     $row = $('#googleSpreadSheetListTable > tbody:last > tr:last');
     $row.append('<td><input type="text" class="input-medium" name="spreadsheet_collection_key" placeholder="Spreadsheet key" value="' + spreadsheet_collection_key + '"></td>');
-    $row.append('<td><input type="text" class="input-medium" name="from_col" placeholder="From column header" value="' + from_column + '"></td>');
+    $row.append('<td><input type="text" class="input-mini" name="from_column" placeholder="From column header" value="' + from_column + '"></td>');
     $row.append('<td><input type="text" class="input-mini" name="delim" placeholder="Delimiter" value="' + delim + '"></td>');
-    $row.append('<td><input type="text" class="input-medium" name="to_col" placeholder="To column header" value="' + to_column + '"></td>');
-    $row.append('<td><input type="text" class="input-medium" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
+    $row.append('<td><input type="text" class="input-mini" name="to_column" placeholder="To column header" value="' + to_column + '"></td>');
+    $row.append('<td><input type="text" class="input-mini" name="reading_column" placeholder="Reading column header" value="' + reading_column + '"></td>');
+    $row.append('<td><input type="text" class="input-small" name="sheet_name" placeholder="Sheet Name" value="' + sheet_name + '"></td>');
     $row.append('<td style="text-align:center">Entries Added <div id="import_count">' + count.toString() + '</div></td>');
     $row.append('<td><button class="btn btn-success pull-right importGoogleSpreadSheetData" type="button">Import Data</button></td>');
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
@@ -368,6 +376,7 @@ function restoreAllGoogleMetadata(items) {
                                           d[i].from_column,
                                           d[i].delim,
                                           d[i].to_column,
+                                          d[i].reading_column,
                                           d[i].sheet_name,
                                           item_count);
     }
@@ -495,14 +504,15 @@ function saveAllGoogleMetadata() {
         return value;
     }).get();
 
-    // HACK: Super silly five.
+    // HACK: Super silly.
     for (var i = 0; i < data.length; i += 5) {
         var meta_data = {
             "spreadsheet_collection_key": data[i],
             "from_column": data[i+1],
             "delim": data[i+2],
             "to_column": data[i+3],
-            "sheet_name": data[i+4],
+            "reading_column": data[i+4],
+            "sheet_name": data[i+5],
         };
         saveGoogleMetadataEntry(meta_data);        
     }
