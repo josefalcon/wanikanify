@@ -34,13 +34,9 @@ After they click "import" or "save", the gui controls need to be greyed out to a
 
 Audio
     - Put in option to disable the audio functionality.
-    - Give users of audio the ability to use GoogleTTS or JapanesePod101 options.
-    - Fix issue where playing an audio from jp101 results in long "does not exist" audio playing. Need to default back to google tts.
+    - All audio should come from wanikani if it's a wanikani word, and then google.
     - Give users of audio the ability to change it from japanese to some other language.
-    - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?id=60108
-    - http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=大した&kana=たいした
     - Change custom vocab to include "readings"
-    - Change google spreadsheet stuff to include readings.
 
 Change everything over to use chrome sync.
 

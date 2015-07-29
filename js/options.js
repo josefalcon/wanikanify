@@ -144,7 +144,9 @@ function on_google_import(data, tabletop) {
             for (k = 0; k < splitEnglishWords.length; k++) {
                 var eng_words = splitEnglishWords[k].trim();
                 var jap_word = entry[to_column].trim();
-                var reading = entry[reading].trim();
+                var reading = entry[reading_column];
+                if (reading)
+                    reading = reading.trim();
                 if (eng_words.length == 0 || jap_word.length == 0)
                     continue;
                 var o = {eng: eng_words, jap: jap_word, jap_reading:reading};

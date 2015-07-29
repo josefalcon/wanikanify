@@ -36,7 +36,11 @@ function main(cache) {
     console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
     importCustomVocab(vocabDictionary, cache);
     console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
-    var dictionaryCallback = buildDictionaryCallback(vocabDictionary, cache.wanikanify_vocab.vocabList);
+    var dictionaryCallback = buildDictionaryCallback(
+        vocabDictionary,
+        cache.wanikanify_vocab.vocabList,
+        cache.wanikanify_googleVocabKey.collections,
+        cache.wanikanify_customvocab);
 
     //var total_num_entries = Object.keys(vocabDictionary).length;
     //console.log(total_num_entries);
@@ -253,26 +257,76 @@ function toDictionary(vocabList) {
 }
 
 // ------------------------------------------------------------------------------------------------
-function getReading(wanikani_vocab_list, kanji) {
+function getReading(wanikani_vocab_list, googleVocab, custom_vocab_list, vocab_to_find) {
     // Search wanikani for the reading.
     for (var i = 0; i < wanikani_vocab_list.length; ++i) {
-        if (wanikani_vocab_list[i].character == kanji) {
+        if (wanikani_vocab_list[i].character == vocab_to_find) {
             return wanikani_vocab_list[i].kana;
         }
     }
     
-    // TODO: Search google spreadsheets for the reading.
+    // Search google spreadsheets for the reading.
+    // We have multiple collections.
+    // Each collection can contain multiple sheets.
+    // Each sheet contains multiple entries of english words -> japanese mappings.
+    // Each entry needs to be split up into multiple synonyms.
+    var collections = googleVocab;
+    // For each collection.
+    for (spreadsheet_collection_key in collections) {
+        var sheets = collections[spreadsheet_collection_key];
+        // For each sheet in that collection.
+        for (sheet_name in sheets) {
+            // For each entry in that sheet.
+            for (var i = 0; i < sheets[sheet_name].length; ++i) {
+                var entry = sheets[sheet_name][i];
+                var japanese_word = entry.jap;
+                if (japanese_word == vocab_to_find) {
+                    return entry.jap_reading;
+                }
+            }
+        }
+    }
+
+    /*
+    // Search custom vocab for the reading.
+    var ENTRY_DELIM = "\n";
+    var ENG_JAP_COMBO_DELIM = ";";
+    var ENG_VOCAB_DELIM = ",";
+    var customVocab = cache[CUST_VOCAB_KEY];
+    if (!customVocab || customVocab.length == 0) {
+        return;
+    }
+
+    // Explode entire list into sets of englishwords and japanese combinations.
+    var splitList = customVocab.split(ENTRY_DELIM);
+    for (var i = 0; i < splitList.length; ++i) {
+        // Explode each entry into english words and Kanji.
+        var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
+        var kanjiVocabWord = splitEntry[1].trim();
+        for (var j = 0; j < splitEntry.length; ++j) {
+            var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
+            for (var k = 0; k < splitEnglishWords.length; ++k) {
+                // If it already exists, it gets replaced.
+                var engVocabWord = splitEnglishWords[k].trim();
+                vocabDictionary[engVocabWord] = kanjiVocabWord;
+            }
+        }
+    }*/
     
-    // TODO: Search custom vocab for the reading.
-    
+    return "";
+}
+
+// ------------------------------------------------------------------------------------------------
+function fetchWaniKaniAudioURL(reading) {
     return "";
 }
 
 // ------------------------------------------------------------------------------------------------
 function buildAudioUrl(kanji, reading) {
     if (!kanji)
-        return str;
-    
+        return "";
+
+    var url = {};
     if (!reading) {
         url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + kanji + '&tl=ja' + '\'';
     } else {
@@ -286,24 +340,30 @@ function buildAudioUrl(kanji, reading) {
 
 // ------------------------------------------------------------------------------------------------
 // https://cloud.google.com/translate/v2/using_rest#language-params
-function fetchGoogleTTSURL(word)
-{
-    return '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
-}
+//function fetchGoogleTTSURL(word)
+//{
+//    return '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
+//}
 
 // ------------------------------------------------------------------------------------------------
 // Creates a closure on the given dictionary.
 // buildDictionaryCallback : Object -> (function(String) -> String)
-function buildDictionaryCallback(vocabDictionary, wanikani_vocab_list) {
+function buildDictionaryCallback(
+    vocabDictionary,
+    wanikani_vocab_list,
+    google_collections,
+    custom_vocab) {
+
     return function(str) {
         var kanji = vocabDictionary[str.toLowerCase()];
-        var reading = getReading(wanikani_vocab_list, kanji);
-
+        if (!kanji)
+            return str;
+        var reading = getReading(wanikani_vocab_list, google_collections, custom_vocab, kanji);
         var url = buildAudioUrl(kanji, reading);
         if (!url)
             return str;
         return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-            '" onmouseover="timer1=setTimeout(function(){var audio = new Audio(' + audio_url + '); audio.play();}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+            '" onmouseover="timer1=setTimeout(function(){var audio = new Audio(' + url + '); audio.play();}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
             // TODO: I want to somehow show a little thing with a definition under it from jisho. Maybe...
             // window.open(\'http://jisho.org/search/' + kanji + '\');
     }
