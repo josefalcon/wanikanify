@@ -236,7 +236,7 @@ function on_click_import_button() {
     Tabletop.init( { key: spreadsheet_collection_key,
                      callback: on_google_import,
                      wanted: [sheet_name],
-                     debug: true } );
+                     debug: false } );
 
     return true;
 }
