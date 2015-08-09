@@ -42,25 +42,23 @@ function update_import_count(spreadsheet_collection_key, sheet_name, count) {
     var elements = $('#googleSpreadSheetListTable > tbody > tr');
     for (var i = 0; i < elements.length; ++i) {
         var children = elements[i].children;
-        var key = {};
-        var sn = {};
-        var import_count = {};
-        for (var j = 0; j < children.length; ++j) {
-            var input_field = children[j].children.spreadsheet_collection_key;
-            if (input_field) {
-                key = input_field.value;
-            }
-            input_field = children[j].children.sheet_name;
-            if (input_field) {
-                sn = input_field.value;
-            }
-            input_field = children[j].children.import_count;
-            if (input_field) {
-                import_count = input_field;
-            }
-        }
-        if (key == spreadsheet_collection_key && sn == sheet_name) {
+        var key = children[0].children.spreadsheet_collection_key;
+        var from_column = children[1].children.from_column;
+        var delim = children[2].children.delim;
+        var to_column = children[3].children.to_column;
+        var reading_column = children[4].children.reading_column;
+        var sn = children[5].children.sheet_name;
+        var import_count = children[6].children.import_count;
+
+        if (key.value == spreadsheet_collection_key && sn.value == sheet_name) {
             import_count.outerText = count.toString();
+            key.disabled = true;
+            from_column.disabled = true;
+            delim.disabled = true;
+            to_column.disabled = true;
+            reading_column.disabled = true;
+            sn.disabled = true;
+            break;
         }
     }
 }
@@ -295,6 +293,7 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     console.log("add_google_spread_sheet_list_item() - " + to_column);
     console.log("add_google_spread_sheet_list_item() - " + reading_column);
     console.log("add_google_spread_sheet_list_item() - " + sheet_name);
+    console.log("add_google_spread_sheet_list_item() - " + count.toString());
     
     var $googleSpreadSheetListTable = $('#googleSpreadSheetListTable > tbody:last');
     $googleSpreadSheetListTable.append('<tr></tr>');
@@ -309,6 +308,15 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
     $row.append('<td style="text-align:center">Entries Added <div id="import_count">' + count.toString() + '</div></td>');
     $row.append('<td><button class="btn btn-success pull-right importGoogleSpreadSheetData" type="button">Import Data</button></td>');
     $row.append('<td><button class="btn btn-danger pull-right removeGoogleSpreadSheetListItem" type="button">Remove Item</button></td>');
+
+    if (count != 0) {
+        $row[0].cells[0].children[0].disabled = true;
+        $row[0].cells[1].children[0].disabled = true;
+        $row[0].cells[2].children[0].disabled = true;
+        $row[0].cells[3].children[0].disabled = true;
+        $row[0].cells[4].children[0].disabled = true;
+        $row[0].cells[5].children[0].disabled = true;
+    }
 
     $('.removeGoogleSpreadSheetListItem:last').click(on_click_remove_item_button);
     $('.importGoogleSpreadSheetData:last').click(on_click_import_button);
@@ -364,15 +372,14 @@ function restoreAllGoogleMetadata(items) {
         console.log("restoreAllGoogleMetadata() - Restoring: " + d[i].spreadsheet_collection_key + ", " + d[i].sheet_name);
         
         // It's possible they created the row, but never imported anything. If that's the case,
-        // there wouldn't be any data saved out and this code would fail.
+        // there wouldn't be any data saved out.
         var item_count = 0;
         var collection = allImportedVocabDictionaries[d[i].spreadsheet_collection_key];
         if (collection) {
             var sheet = collection[d[i].sheet_name];
-            if (!sheet) {
-                return;
+            if (sheet) {
+                item_count = sheet.length;
             }
-            item_count = sheet.length;
         }
         add_google_spread_sheet_list_item(d[i].spreadsheet_collection_key,
                                           d[i].from_column,
@@ -507,7 +514,7 @@ function saveAllGoogleMetadata() {
     }).get();
 
     // HACK: Super silly.
-    for (var i = 0; i < data.length; i += 5) {
+    for (var i = 0; i < data.length; i += 6) {
         var meta_data = {
             "spreadsheet_collection_key": data[i],
             "from_column": data[i+1],

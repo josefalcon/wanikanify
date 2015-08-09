@@ -20,18 +20,9 @@ Audio
     - This works very well as a learning tool with rikaikun.
     - It's possible the audio played could not be correct if the readings are missing from the spreadsheets.
         - Without the readings, it has to default to using GoogleTTS.
+    - If the audio doesn't work, you may need to type in a captcha here: http://translate.google.com/translate_tts?ie=UTF-8&q=ねこ&tl=ja
 
 TODO:
-I want the user to be able to specify the columns by number.
-    - I want the user to be able to specify whether or not it has a header using a checkbox.
-    - I should be able to do this by iterating through the keys.
-    - The user can specify a column index (0 - ?) for both.
-        - Validate to make sure row and column are not the same.
-    Show dialog when to or from column is incorrect.
-
-After they click "import" or "save", the gui controls need to be greyed out to avoid sync issues.
-    - Should also be greyed out upon load.
-
 Audio
     - Put in option to disable the audio functionality.
     - All audio should come from wanikani if it's a wanikani word, and then google.
@@ -49,3 +40,6 @@ Remove the "allImportedVocabDictionaries" variable. This isn't really needed, si
 
 Convert all for loops into jquery loops.
 Upgrade JQuery to remove warning about synchronous xmlhttprequest call being deprecated.
+
+Can't fix.
+User can not specify the columns by number and can not choose to have a header. Tabletop requires it.
