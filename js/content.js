@@ -1,6 +1,7 @@
 /**
- * WaniKanify - 2012/12/08
+ * WaniKanify - 2012/12/08 - 2015/08/09
  * Author: jose.e.falcon@gmail.com
+ * Subauthor: todd.seiler@gmail.com
  */
 
 // cache keys
@@ -24,37 +25,39 @@ var FILTER_MAP = {
 // ------------------------------------------------------------------------------------------------
 // The main program driver.
 // main : Object ->
-function main(cache) {
-    var apiKey = cache[API_KEY];
-    if (!apiKey) {
-        console.error("No API key provided! Please use the options page to specify your API key.");
-    }
+function main(cache_local) {
+    chrome.storage.sync.get([API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_META_KEY, AUDIO_KEY], function(cache_sync) {
+        var apiKey = cache_sync[API_KEY];
+        if (!apiKey) {
+            console.error("No API key provided! Please use the options page to specify your API key.");
+        }
+        var vocabDictionary = {};
+        importWaniKaniVocab(vocabDictionary, cache_sync, cache_local, apiKey);
+        console.log("Total entries from WaniKani: " + Object.keys(vocabDictionary).length);
+        importGoogleVocab(vocabDictionary, cache_local, cache_sync);
+        console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
+        importCustomVocab(vocabDictionary, cache_local, cache_sync);
+        console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
+        var dictionaryCallback = buildDictionaryCallback(
+            cache_local,
+            cache_sync,
+            vocabDictionary,
+            cache_local.wanikanify_vocab,
+            cache_local.wanikanify_googleVocabKey,
+            cache_sync.wanikanify_customvocab);
 
-    var vocabDictionary = {};
-    importWaniKaniVocab(vocabDictionary, cache, apiKey);
-    console.log("Total entries from WaniKani: " + Object.keys(vocabDictionary).length);
-    importGoogleVocab(vocabDictionary, cache);
-    console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
-    importCustomVocab(vocabDictionary, cache);
-    console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
-    var dictionaryCallback = buildDictionaryCallback(
-        cache,
-        vocabDictionary,
-        cache.wanikanify_vocab,
-        cache.wanikanify_googleVocabKey,
-        cache.wanikanify_customvocab);
-
-    //var total_num_entries = Object.keys(vocabDictionary).length;
-    //console.log(total_num_entries);
-    //chrome.browserAction.setBadgeText({text: "154"});
-    $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
+        //var total_num_entries = Object.keys(vocabDictionary).length;
+        //console.log(total_num_entries);
+        //chrome.browserAction.setBadgeText({text: "154"});
+        $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
+    });
 }
 
 // ------------------------------------------------------------------------------------------------
-function importWaniKaniVocab(vocabDictionary, cache, apiKey) {
-    var waniKaniVocabList = tryCacheOrWaniKani(cache, apiKey);
+function importWaniKaniVocab(vocabDictionary, cache_sync, cache_local, apiKey) {
+    var waniKaniVocabList = tryCacheOrWaniKani(cache_local, apiKey);
     if (waniKaniVocabList && waniKaniVocabList.length > 0) {
-        var filteredList = filterVocabList(waniKaniVocabList, getFilters(cache));
+        var filteredList = filterVocabList(waniKaniVocabList, getFilters(cache_sync));
         var d = toDictionary(filteredList);
         // This could be slow...
         for (key in d) {
@@ -65,11 +68,11 @@ function importWaniKaniVocab(vocabDictionary, cache, apiKey) {
 
 // ------------------------------------------------------------------------------------------------
 // Dump in the custom vocabulary words, overriding the wanikani entries.
-function importCustomVocab(vocabDictionary, cache) {
+function importCustomVocab(vocabDictionary, cache_local, cache_sync) {
     var ENTRY_DELIM = "\n";
     var ENG_JAP_COMBO_DELIM = ";";
     var ENG_VOCAB_DELIM = ",";
-    var customVocab = cache[CUST_VOCAB_KEY];
+    var customVocab = cache_sync[CUST_VOCAB_KEY];
     if (!customVocab || customVocab.length == 0) {
         return;
     }
@@ -105,13 +108,13 @@ function getDelim(meta_data_collection, spreadsheet_collection_key, sheet_name) 
 }
 
 // ------------------------------------------------------------------------------------------------
-function importGoogleVocab(vocabDictionary, cache) {
-    var googleVocab = cache[GOOG_VOCAB_KEY];
+function importGoogleVocab(vocabDictionary, cache_local, cache_sync) {
+    var googleVocab = cache_local[GOOG_VOCAB_KEY];
     if (!googleVocab || googleVocab.collections.length == 0) {
         return;
     }
 
-    var metaData = cache[GOOG_VOCAB_META_KEY];
+    var metaData = cache_sync[GOOG_VOCAB_META_KEY];
     if (!metaData) {
         return;
     }
@@ -147,8 +150,8 @@ function importGoogleVocab(vocabDictionary, cache) {
 // ------------------------------------------------------------------------------------------------
 // Returns the filters to use for vocab filtering
 // getFilters: Object -> [Function]
-function getFilters(cache) {
-    var options = cache[SRS_KEY];
+function getFilters(cache_sync) {
+    var options = cache_sync[SRS_KEY];
     if (options) {
         return filters = options.map(function(obj, index) {
             return FILTER_MAP[obj];
@@ -160,7 +163,7 @@ function getFilters(cache) {
 // ------------------------------------------------------------------------------------------------
 // Returns a dictionary from String -> String.
 // tryCacheOrWaniKani : Object, String -> Object
-function tryCacheOrWaniKani(cache, apiKey) {
+function tryCacheOrWaniKani(cache_local, apiKey) {
     // returns true if the given date is over an hour old.
     function isExpired(date) {
         var then = new Date(date);
@@ -168,7 +171,7 @@ function tryCacheOrWaniKani(cache, apiKey) {
         return (Math.abs(now - then) > 3600000);
     }
 
-    var hit = cache[VOCAB_KEY];
+    var hit = cache_local[VOCAB_KEY];
     if (hit && hit.vocabList) {
         if (!hit.inserted || isExpired(hit.inserted)) {
             tryWaniKani(apiKey, true);
@@ -351,13 +354,14 @@ function buildAudioUrl(kanji, reading) {
 // Creates a closure on the given dictionary.
 // buildDictionaryCallback : Object -> (function(String) -> String)
 function buildDictionaryCallback(
-    cache,
+    cache_local,
+    cache_sync,
     vocabDictionary,
     wanikani_vocab_list,
     google_collections,
     custom_vocab) {
 
-    var audio_settings = cache[AUDIO_KEY];
+    var audio_settings = cache_sync[AUDIO_KEY];
     var audio_on = true;
     var audio_on_click = false;
     if (audio_settings) {
@@ -402,4 +406,4 @@ function buildDictionaryCallback(
 }
 
 // kick off the program
-chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_KEY, GOOG_VOCAB_META_KEY, AUDIO_KEY], main);
+chrome.storage.local.get([VOCAB_KEY, GOOG_VOCAB_KEY], main);
