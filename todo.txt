@@ -22,11 +22,8 @@ Audio
     - Custom vocab can use readings for audio.
 
 TODO:
-Audio
-    - All audio should come from wanikani if it's a wanikani word, and then google.
-    - Give users of audio the ability to change it from japanese to some other language.
-
-Change everything over to use chrome sync.
+    Using sheet Pt 3, clicking import doesn't import, it just does nothing.
+    Custom vocab does not use readings user put in.
 
 Verify all messaging makes sense and that it's user friendly.
 Had some issues with race conditions and saving/loading and importing of data.
