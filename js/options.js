@@ -21,8 +21,7 @@ function add_black_list_item(value) {
 // ------------------------------------------------------------------------------------------------
 function add_empty_google_spread_sheet_list_item(value) {
     console.log("add_empty_google_spread_sheet_list_item()");
-    // HACK: This is just to auto populate for dev's convenience for now.
-    //$( "#google_failed_import" ).dialog();
+
     add_google_spread_sheet_list_item(
     "1lIo2calXb_GtaQCMLr989_Ma_hxXlxFsHE0egko-D9k", "English", ",", "Kanji", "Hiragana", "6k Pt 1", 0);
 }
@@ -32,13 +31,6 @@ function add_empty_google_spread_sheet_list_item(value) {
 // This updates the "import count" label. This is totally an insane way of doing it,
 // but I couldn't figure out how to use JQuery to do it properly.
 function update_import_count(spreadsheet_collection_key, sheet_name, count) {
-    // FIX: I think I can just use this, but I'm not sure.
-    //var data = $('#googleSpreadSheetListTable input:text').map(function() {
-    //    return $(this).val();
-    //}).filter(function(index, value) {
-    //    return value;
-    //}).get();
-    
     var elements = $('#googleSpreadSheetListTable > tbody > tr');
     for (var i = 0; i < elements.length; ++i) {
         var children = elements[i].children;
@@ -552,6 +544,13 @@ function save_options() {
     }).get();
     chrome.storage.local.set({"wanikanify_srs":srs});
 
+    var audio_on = $('input:checkbox[id=audio_on]:checked').val();
+    var audio_click = $('input:radio[id=audio_on_click]:checked').val();
+    var audio_settings = {};
+    audio_settings["on"] = (audio_on)?true:false;
+    audio_settings["clicked"] = (audio_click)?true:false;
+    chrome.storage.local.set({"wanikanify_audio":audio_settings});
+
     var blackList = $('#blackListTable input').map(function() {
         return $(this).val();
     }).filter(function(index, value) {
@@ -579,6 +578,7 @@ function restore_options() {
     chrome.storage.local.get([
         "wanikanify_apiKey",
         "wanikanify_runOn",
+        "wanikanify_audio",
         "wanikanify_srs",
         "wanikanify_blackList",
         "wanikanify_customvocab",
@@ -608,10 +608,24 @@ function restore_options() {
                     $("#"+value).prop("checked", true);
                 });
             }
+
+            var audio_settings = items.wanikanify_audio;
+            if (audio_settings) {
+                $("#audio_on").prop("checked", audio_settings.on);
+                var click = audio_settings.clicked;
+                if (click == true) {
+                    $('#audio_on_click').click();
+                } else {
+                    $('#audio_on_hover').click();
+                }
+            }
+
             var blackList = items.wanikanify_blackList;
-            $.each(blackList, function(i, value) {
-                add_black_list_item(value);
-            });
+            if (blackList) {
+                $.each(blackList, function(i, value) {
+                    add_black_list_item(value);
+                });
+            }
 
             console.log("restore_options() - Restoring custom vocab.");
             var customVocab = items.wanikanify_customvocab;

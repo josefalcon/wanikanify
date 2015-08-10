@@ -15,19 +15,16 @@ Google Chrome Sync
     - Note the vocab data is not synced because it's too much data. But the settings are synced, so you'll just have to click the "import" buttons again for Google Spreadsheets.
     - The custom vocab box will be synced, unless there's too much data in it. The sync could fail if there's too much data in the Custom Vocab text box.
 Audio
-    - Mousing over a word will play the audio for that word from JP101 or GoogleTTS.
-    - Audio is delayed slightly so it's not annoying and doesn't cause unnecessary server load.
+    - Mousing over a word will play the audio for that word from HTML5's build in speech synthesis.
     - This works very well as a learning tool with rikaikun.
     - It's possible the audio played could not be correct if the readings are missing from the spreadsheets.
-        - Without the readings, it has to default to using GoogleTTS.
-    - If the audio doesn't work, you may need to type in a captcha here: http://translate.google.com/translate_tts?ie=UTF-8&q=ねこ&tl=ja
+    - Put in option to disable the audio functionality.
+    - Custom vocab can use readings for audio.
 
 TODO:
 Audio
-    - Put in option to disable the audio functionality.
     - All audio should come from wanikani if it's a wanikani word, and then google.
     - Give users of audio the ability to change it from japanese to some other language.
-    - Change custom vocab to include "readings"
 
 Change everything over to use chrome sync.
 
