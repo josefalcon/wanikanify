@@ -8,8 +8,9 @@ var VOCAB_KEY      = "wanikanify_vocab";
 var SRS_KEY        = "wanikanify_srs";
 var API_KEY        = "wanikanify_apiKey";
 var CUST_VOCAB_KEY = "wanikanify_customvocab";
-var GOOG_VOCAB_KEY = "wanikanify_googleVocabKey"
-var GOOG_VOCAB_META_KEY = "wanikanify_googleVocab_meta"
+var GOOG_VOCAB_KEY = "wanikanify_googleVocabKey";
+var GOOG_VOCAB_META_KEY = "wanikanify_googleVocab_meta";
+var AUDIO_KEY      = "wanikanify_audio";
 
 // filter map
 var FILTER_MAP = {
@@ -37,9 +38,10 @@ function main(cache) {
     importCustomVocab(vocabDictionary, cache);
     console.log("Total entries after CustomVocab: " + Object.keys(vocabDictionary).length);
     var dictionaryCallback = buildDictionaryCallback(
+        cache,
         vocabDictionary,
-        cache.wanikanify_vocab.vocabList,
-        cache.wanikanify_googleVocabKey.collections,
+        cache.wanikanify_vocab,
+        cache.wanikanify_googleVocabKey,
         cache.wanikanify_customvocab);
 
     //var total_num_entries = Object.keys(vocabDictionary).length;
@@ -328,11 +330,11 @@ function buildAudioUrl(kanji, reading) {
 
     var url = {};
     if (!reading) {
-        url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + kanji + '&tl=ja' + '\'';
+        url = kanji;
     } else {
         url = fetchWaniKaniAudioURL(reading);
         if (!url) {
-            url = '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
+            url = reading;
         }
     }
     return url;
@@ -349,25 +351,55 @@ function buildAudioUrl(kanji, reading) {
 // Creates a closure on the given dictionary.
 // buildDictionaryCallback : Object -> (function(String) -> String)
 function buildDictionaryCallback(
+    cache,
     vocabDictionary,
     wanikani_vocab_list,
     google_collections,
     custom_vocab) {
 
+    var audio_settings = cache[AUDIO_KEY];
+    var audio_on = true;
+    var audio_on_click = false;
+    if (audio_settings) {
+        audio_on = audio_settings.on;
+        audio_on_click = audio_settings.clicked;
+    }
+
+    var wk_vocab_list = {};
+    if (wanikani_vocab_list) {
+        wk_vocab_list = wanikani_vocab_list.vocabList;
+    }
+    var gc = {};
+    if (google_collections) {
+        gc = google_collections.collections;
+    }
+
     return function(str) {
         var kanji = vocabDictionary[str.toLowerCase()];
         if (!kanji)
             return str;
-        var reading = getReading(wanikani_vocab_list, google_collections, custom_vocab, kanji);
+        var reading = getReading(wk_vocab_list, gc, custom_vocab, kanji);
         var url = buildAudioUrl(kanji, reading);
         if (!url)
             return str;
-        return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-            '" onmouseover="timer1=setTimeout(function(){var audio = new Audio(' + url + '); audio.play();}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
-            // TODO: I want to somehow show a little thing with a definition under it from jisho. Maybe...
-            // window.open(\'http://jisho.org/search/' + kanji + '\');
+
+
+        // FIX: Lots of duplication here.
+        if (audio_on) {
+            if (audio_on_click) {
+                return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
+                    '" onClick="var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja\';window.speechSynthesis.speak(msg); var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+            } else {
+                return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
+                    '" onmouseover="timer1=setTimeout(function(){var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja\';window.speechSynthesis.speak(msg);}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+            }
+        }
+        else {
+                return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
+                    '" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+        }
     }
 }
 
 // kick off the program
-chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_KEY, GOOG_VOCAB_META_KEY], main);
+chrome.storage.local.get([VOCAB_KEY, API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_KEY, GOOG_VOCAB_META_KEY, AUDIO_KEY], main);
