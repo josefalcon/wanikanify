@@ -3,22 +3,21 @@ Importing Google Spreadsheet Data
     - User can now import large amounts of vocab words using google spreadsheets.
     - This allows users to share their vocab lists.
     - Importing from Google Spreadsheets overrides the WaniKani vocab.
-    - If an update to the spreadsheet occurs, they just have to click the "import" button again.
     - Shows the total number of entries that have been imported. Which could be multiple synonyms.
 Custom Vocab Override
     - User can now override WaniKani vocab entries AND "Google spreadsheets import" using the custom vocab box.
     - Or if they just want to add a few extra vocab words easily, they can also use it for that too.
     - This is meant as a quick and dirty way to add your own custom vocab easily without setting up a google spreadsheet.
     - For example, "time" gets translated as "〜回" from WaniKani, which is silly. So you can use this to override it to just "回" if you want.
+    - This is not meant for large amounts of vocab since it is also synced using Google Sync.
 Google Chrome Sync
     - Settings for wanikanify now are persistence across computers if user has Chrome's sync functionality enabled.
     - Note the vocab data is not synced because it's too much data. But the settings are synced, so you'll just have to click the "import" buttons again for Google Spreadsheets.
-    - The custom vocab box will be synced, unless there's too much data in it. The sync could fail if there's too much data in the Custom Vocab text box.
 Audio
     - Mousing over a word will play the audio for that word from HTML5's build in speech synthesis.
-    - This works very well as a learning tool with rikaikun.
-    - It's possible the audio played could not be correct if the readings are missing from the spreadsheets.
-    - Put in option to disable the audio functionality.
+    - This works very well as a learning tool in combination with rikaikun.
+    - It's possible the audio played could not be correct if the readings are missing from the spreadsheets, but it will try to play it anyways.
+    - Put in option to disable the audio functionality and change whether it's on click or on hover.
     - Custom vocab can use readings for audio.
 
 TODO:
@@ -26,8 +25,6 @@ TODO:
     Custom vocab does not use readings user put in.
 
 Verify all messaging makes sense and that it's user friendly.
-Had some issues with race conditions and saving/loading and importing of data.
-    - Check all importing and saving/loading to make sure there aren't any race conditions.
 Run tests where I've imported about 6000 vocab words.
 
 Remove the "allImportedVocabDictionaries" variable. This isn't really needed, since the other page needs to fetch it from chrome cache anyways.
