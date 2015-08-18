@@ -541,6 +541,7 @@ function save_options() {
     $(".alert-error").hide();
 
     chrome.storage.sync.set({"wanikanify_apiKey":apiKey});
+    chrome.browserAction.setPopup({popup:""});
 
     var runOn = $('input:radio[name=runOn]:checked').val();
     chrome.storage.sync.set({"wanikanify_runOn":runOn});

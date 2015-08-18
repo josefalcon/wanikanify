@@ -46,9 +46,6 @@ function main(cache_local) {
             cache_local.wanikanify_googleVocabKey,
             cache_sync.wanikanify_customvocab);
 
-        //var total_num_entries = Object.keys(vocabDictionary).length;
-        //console.log(total_num_entries);
-        //chrome.browserAction.setBadgeText({text: "154"});
         $("body *:not(noscript):not(script):not(style)").replaceText(/\b(\S+?)\b/g, dictionaryCallback);
     });
 }
