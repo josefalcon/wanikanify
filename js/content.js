@@ -79,16 +79,31 @@ function importCustomVocab(vocabDictionary, cache_local, cache_sync) {
 
     // Explode entire list into sets of englishwords and japanese combinations.
     var splitList = customVocab.split(ENTRY_DELIM);
+    if (!splitList) {
+        return;
+    }
     for (var i = 0; i < splitList.length; ++i) {
         // Explode each entry into english words and Kanji.
         var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
-        var kanjiVocabWord = splitEntry[1].trim();
-        for (var j = 0; j < splitEntry.length; ++j) {
-            var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
-            for (var k = 0; k < splitEnglishWords.length; ++k) {
-                // If it already exists, it gets replaced.
-                var engVocabWord = splitEnglishWords[k].trim();
-                vocabDictionary[engVocabWord] = kanjiVocabWord;
+        if (!splitEntry) {
+            continue;
+        }
+        var untrimmedSplitEntry = splitEntry[1];
+        if (untrimmedSplitEntry) {
+            var kanjiVocabWord = untrimmedSplitEntry.trim();
+            for (var j = 0; j < splitEntry.length; ++j) {
+                var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
+                if (!splitEnglishWords) {
+                    continue;
+                }
+                for (var k = 0; k < splitEnglishWords.length; ++k) {
+                    // If it already exists, it gets replaced.
+                    var engWordUntrimmed = splitEnglishWords[k];
+                    if (engWordUntrimmed) {
+                        var engVocabWord = engWordUntrimmed.trim();
+                        vocabDictionary[engVocabWord] = kanjiVocabWord;
+                    }
+                }
             }
         }
     }
@@ -263,13 +278,38 @@ function toDictionary(vocabList) {
 
 // ------------------------------------------------------------------------------------------------
 function getReading(wanikani_vocab_list, googleVocab, custom_vocab_list, vocab_to_find) {
-    // Search wanikani for the reading.
-    for (var i = 0; i < wanikani_vocab_list.length; ++i) {
-        if (wanikani_vocab_list[i].character == vocab_to_find) {
-            return wanikani_vocab_list[i].kana;
+    // Search custom vocab for the reading.
+    // FIX: Make this global.
+    var ENTRY_DELIM = "\n";
+    var ENG_JAP_COMBO_DELIM = ";";
+    var ENG_VOCAB_DELIM = ",";
+    if (!custom_vocab_list || custom_vocab_list.length == 0) {
+        return final_reading;
+    }
+
+    // Explode entire list into sets of englishwords and japanese combinations.
+    var splitList = custom_vocab_list.split(ENTRY_DELIM);
+    if (splitList) {
+        for (var i = 0; i < splitList.length; ++i) {
+            // Explode each entry into english words and Kanji.
+            var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
+            if (splitEntry) {
+                var untrimmedSplitEntry = splitEntry[1];
+                if (untrimmedSplitEntry) {
+                    var kanjiVocabWord = untrimmedSplitEntry.trim();
+                    if (kanjiVocabWord == vocab_to_find) {
+                        var reading = splitEntry[2];
+                        if (reading) {
+                            return reading.trim();
+                        } else {
+                            return kanjiVocabWord;
+                        }
+                    }
+                }
+            }
         }
     }
-    
+
     // Search google spreadsheets for the reading.
     // We have multiple collections.
     // Each collection can contain multiple sheets.
@@ -292,33 +332,14 @@ function getReading(wanikani_vocab_list, googleVocab, custom_vocab_list, vocab_t
         }
     }
 
-    /*
-    // Search custom vocab for the reading.
-    var ENTRY_DELIM = "\n";
-    var ENG_JAP_COMBO_DELIM = ";";
-    var ENG_VOCAB_DELIM = ",";
-    var customVocab = cache[CUST_VOCAB_KEY];
-    if (!customVocab || customVocab.length == 0) {
-        return;
-    }
-
-    // Explode entire list into sets of englishwords and japanese combinations.
-    var splitList = customVocab.split(ENTRY_DELIM);
-    for (var i = 0; i < splitList.length; ++i) {
-        // Explode each entry into english words and Kanji.
-        var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
-        var kanjiVocabWord = splitEntry[1].trim();
-        for (var j = 0; j < splitEntry.length; ++j) {
-            var splitEnglishWords = splitEntry[0].split(ENG_VOCAB_DELIM);
-            for (var k = 0; k < splitEnglishWords.length; ++k) {
-                // If it already exists, it gets replaced.
-                var engVocabWord = splitEnglishWords[k].trim();
-                vocabDictionary[engVocabWord] = kanjiVocabWord;
-            }
+    // Search wanikani for the reading.
+    for (var i = 0; i < wanikani_vocab_list.length; ++i) {
+        if (wanikani_vocab_list[i].character == vocab_to_find) {
+            return wanikani_vocab_list[i].kana;
         }
-    }*/
+    }
     
-    return "";
+    return vocab_to_find;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -342,13 +363,6 @@ function buildAudioUrl(kanji, reading) {
     }
     return url;
 }
-
-// ------------------------------------------------------------------------------------------------
-// https://cloud.google.com/translate/v2/using_rest#language-params
-//function fetchGoogleTTSURL(word)
-//{
-//    return '\'http://translate.google.com/translate_tts?ie=UTF-8&q=' + reading + '&tl=ja' + '\'';
-//}
 
 // ------------------------------------------------------------------------------------------------
 // Creates a closure on the given dictionary.

@@ -22,7 +22,6 @@ Audio
 
 TODO:
     Using sheet Pt 3, clicking import doesn't import, it just does nothing.
-    Custom vocab does not use readings user put in.
 
 Verify all messaging makes sense and that it's user friendly.
 Run tests where I've imported about 6000 vocab words.
