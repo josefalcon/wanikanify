@@ -12,7 +12,7 @@ function save_popup() {
         "wanikanify_runOn": "onClick",
         "wanikanify_srs": ["apprentice", "guru", "master", "enlighten"]
     }
-    chrome.storage.local.set(defaultOptions, function() {
+    chrome.storage.sync.set(defaultOptions, function() {
         chrome.browserAction.setPopup({popup:""});
         window.close();
     });
