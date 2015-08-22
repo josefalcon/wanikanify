@@ -280,26 +280,24 @@ function getReading(wanikani_vocab_list, googleVocab, custom_vocab_list, vocab_t
     var ENTRY_DELIM = "\n";
     var ENG_JAP_COMBO_DELIM = ";";
     var ENG_VOCAB_DELIM = ",";
-    if (!custom_vocab_list || custom_vocab_list.length == 0) {
-        return final_reading;
-    }
-
-    // Explode entire list into sets of englishwords and japanese combinations.
-    var splitList = custom_vocab_list.split(ENTRY_DELIM);
-    if (splitList) {
-        for (var i = 0; i < splitList.length; ++i) {
-            // Explode each entry into english words and Kanji.
-            var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
-            if (splitEntry) {
-                var untrimmedSplitEntry = splitEntry[1];
-                if (untrimmedSplitEntry) {
-                    var kanjiVocabWord = untrimmedSplitEntry.trim();
-                    if (kanjiVocabWord == vocab_to_find) {
-                        var reading = splitEntry[2];
-                        if (reading) {
-                            return reading.trim();
-                        } else {
-                            return kanjiVocabWord;
+    if (custom_vocab_list && custom_vocab_list.length != 0) {
+        // Explode entire list into sets of englishwords and japanese combinations.
+        var splitList = custom_vocab_list.split(ENTRY_DELIM);
+        if (splitList) {
+            for (var i = 0; i < splitList.length; ++i) {
+                // Explode each entry into english words and Kanji.
+                var splitEntry = splitList[i].split(ENG_JAP_COMBO_DELIM);
+                if (splitEntry) {
+                    var untrimmedSplitEntry = splitEntry[1];
+                    if (untrimmedSplitEntry) {
+                        var kanjiVocabWord = untrimmedSplitEntry.trim();
+                        if (kanjiVocabWord == vocab_to_find) {
+                            var reading = splitEntry[2];
+                            if (reading) {
+                                return reading.trim();
+                            } else {
+                                return kanjiVocabWord;
+                            }
                         }
                     }
                 }
