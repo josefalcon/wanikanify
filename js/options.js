@@ -33,7 +33,6 @@ function add_empty_google_spread_sheet_list_item(value) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // This updates the "import count" label. This is totally an insane way of doing it,
 // but I couldn't figure out how to use JQuery to do it properly.
 function update_import_count(spreadsheet_collection_key, sheet_name, count) {
@@ -62,7 +61,6 @@ function update_import_count(spreadsheet_collection_key, sheet_name, count) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // Handler for when data has been grabbed from the Google Spreadsheet API. Called from tabletop.
 function on_google_import(data, tabletop) {
     console.log("on_google_import()");
@@ -174,7 +172,6 @@ function on_google_import(data, tabletop) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 function input_is_valid(text) {
     var t = text.trim();
     if (t === "") {
@@ -185,7 +182,6 @@ function input_is_valid(text) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // Handler for when the user clicks the "import" button for a particular row.
 // 1) Retrieves the google spreadsheet data for a particular sheet/key combo.
 // 2) Saves the metadata (the data from the gui controls).
@@ -238,7 +234,6 @@ function on_click_import_button() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // 1) This should delete the row (gui elements)
 // 2) This should delete the saved data in that row (the metadata).
 // 3) This should delete the imported vocab words from this sheet/key combo.
@@ -273,7 +268,6 @@ function on_click_remove_item_button() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // Creates a row in the gui so the user can fill it in. Also hooks up the handlers for the buttons.
 // spreadsheet_collection_key: The unique id for the spreadsheet collection (found in the url).
 // sheet_name: A single spreadsheet name. A spreadsheet collection can have multiple sheets.
@@ -323,7 +317,6 @@ function add_google_spread_sheet_list_item(spreadsheet_collection_key,
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // TODO: This probably should be changed to not save everything, but just a single sheet.
 // It only saves when the user clicks import or deletes a row.
 function saveAllGoogleImported() {
@@ -341,7 +334,6 @@ function saveAllGoogleImported() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 function restoreAllGoogleImported(items) {
     console.log("restoreAllGoogleImported()");
     var data = items.wanikanify_googleVocabKey;
@@ -354,7 +346,6 @@ function restoreAllGoogleImported(items) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // This rebuilds the google import rows based on what's in storage.
 function restoreAllGoogleMetadata(items) {
     console.log("restoreAllGoogleMetadata()");
@@ -390,7 +381,6 @@ function restoreAllGoogleMetadata(items) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
     console.log("deleteGoogleMetadataEntry()");
     console.log("deleteGoogleMetadataEntry() - Spreadsheet collection key: " + spreadsheet_collection_key);
@@ -438,7 +428,6 @@ function deleteGoogleMetadataEntry(spreadsheet_collection_key, sheet_name) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 function saveGoogleMetadataEntry(meta_data) {
     console.log("saveGoogleMetadataEntry()");
     console.log("saveGoogleMetadataEntry() - Attempting to save: " + meta_data.spreadsheet_collection_key + ", " + meta_data.sheet_name);
@@ -500,7 +489,6 @@ function saveGoogleMetadataEntry(meta_data) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 // Saves all the metadata.
 // This data is the same data that's in the GUI elements.
 function saveAllGoogleMetadata() {
@@ -526,7 +514,6 @@ function saveAllGoogleMetadata() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 function save_options() {
     console.log("save_options()");
     var apiKey = $("#apiKey").val();
@@ -579,7 +566,6 @@ function save_options() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// DONE
 function restore_options() {
     console.log("restore_options()");
     chrome.storage.sync.get([
