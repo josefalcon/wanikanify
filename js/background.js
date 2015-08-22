@@ -11,19 +11,23 @@ var executed = {}
 function executeScripts(tab) {
     chrome.tabs.get(tab, function(details) {
         chrome.storage.sync.get(['wanikanify_blackList'], function(items) {
-            var url = details.url,
-                blackList = items.wanikanify_blackList,
-                skipTest = false;
 
-            var matcher;
-            if (blackList.length == 0) {
-                skipTest = true;
-            } else {
-                matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
+            function isBlackListed(details, items) {
+                var url = details.url;
+                var blackList = items.wanikanify_blackList;
+                if (blackList) {
+                    if (blackList.length == 0) {
+                        return false;
+                    } else {
+                        var matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
+                        return (!matcher.test(url))?true:false;
+                    }
+                }
+                return false;
             }
 
 
-            if (skipTest || !matcher.test(url)) {
+            if (!isBlackListed(details, items)) {
                 chrome.tabs.executeScript(null, { file: "js/jquery.js" }, function() {
                     chrome.tabs.executeScript(null, { file: "js/replaceText.js" }, function() {
                         chrome.tabs.executeScript(null, { file: "js/content.js" }, function() {
@@ -32,7 +36,7 @@ function executeScripts(tab) {
                     });
                 });
             } else {
-                console.log(url + " is blacklisted");
+                console.log("Blacklisted");
             }
         });
     });
