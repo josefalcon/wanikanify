@@ -5,6 +5,9 @@
     <title>Wanikanify Options</title>
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/jquery-ui.min.css" rel="stylesheet">
+    <link href="css/jquery-ui.theme.min.css" rel="stylesheet">
+    <link href="css/jquery-ui.structure.min.css" rel="stylesheet">
     <style type="text/css">
       body {
       padding-top: 20px;
@@ -22,9 +25,20 @@
 
     <script src="js/jquery.js"></script>
     <script src="js/options.js"></script>
+    <script src="js/tabletop.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
   </head>
 
   <body>
+    <div id="google_bad_spreadsheet_data" title="Invalid Spreadsheet Data" style="display: none;">
+      <p>Make sure all of the text boxes are filled in and they shouldn't contain any weird characters.</p>
+    </div>
+    <div id="google_failed_import" title="Failed to Import" style="display: none;">
+      <p>Failed to import spreadsheet data. Make sure all text fields are absolutely correct.</p>
+    </div>
+    <div id="google_saved_data_error" title="Saved Data Error" style="display: none;">
+      <p>Something went wrong with the Google Spreadsheet data.</p>
+    </div>
 
     <div class="container-narrow">
       <div class="masthead">
@@ -120,6 +134,46 @@
                 </label>
               </td>
             </tr>
+            <tr>
+              <td>
+                <h4>Audio</h4>
+                <p>
+                  Mousing over a word or clicking it will audibly play it's pronunciation.
+                </p>
+              </td>
+              <td></td>
+              <td>
+                <label class="checkbox inline">
+                  <input type="checkbox" id="audio_on" value="AudioOn" checked> Audio On
+                </label>
+               <label class="radio">
+                  <input type="radio" name="audio" id="audio_on_click" value="onClick">
+                  Click
+                </label>
+                <label class="radio">
+                  <input type="radio" name="audio" id="audio_on_hover" value="onHover" checked>
+                  Hover
+                </label>
+              </td>
+            </tr>
+           <tr>
+              <td>
+                <h4>Custom Vocabulary</h4>
+                <p>
+                  You are no longer limited to Wanikani's set of vocabulary and Kanji!</br>
+                  This overrides Wanikani vocab.</br>
+                  Format: eng1,eng2,...;vocab;reading</br>
+                  <strong>Example:</strong> cat,feline;猫;ねこ</br>
+                  Each entry on a separate line.</br>
+                  Pay attention to the commas and semicolons.</br>
+                  The reading is for audio functionality. (optional)</br>
+                </p>
+              </td>
+              <td></td>
+              <td>
+                <textarea rows="10" cols="40" class="input-xlarge" id="customVocab" placeholder="e,e;v;r"></textarea>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -135,6 +189,31 @@
           </tbody>
         </table>
         <button id="addBlackListItem" class="btn" type="button">Add Item</button>
+      </div>
+      <hr>
+      <div class="row-fluid">
+        <h4>Google Spreadsheet Import List</h4>
+        <p>
+          Similar to "Custom Vocabulary", but more extensive. Allows users to use shared vocabulary lists. Don't freak out, it's easy to use.
+          <ol>
+              <li>Make sure the spreadsheet has been published. File->Publish to web.</li>
+              <li>Each row tells WaniKanifier to import a single spreadsheet. NOTE: A spreadsheet collection can contain multiple sheets, see below.</li>
+              <li><b>Key</b>: The key uniquely identifies the spreadsheet collection (group of sheets). Grab the "key" from the URL, and put it below. Looks something like this: 1lIo2calXb_GtaQCKLr989-Ma_hxXlxFsHE0egko-D9k</li>
+              <li>Make sure the columns in the spreadsheet are all named (has a header row at the top). Do not leave any empty.</li>
+              <li><b>From column header</b>: The name of the column (in the header) we want to map from (column of English words).</li>
+              <li><b>To column header</b>: The name of the column (in the header) we want to map to (column of Kanji/Japanese words).</li>
+              <li><b>Delimiter</b>: The English word column can contain multiple words, separated by a delimiter (default is a comma). Spaces after the delimiter are okay. But you probably don't want a delimiter of just whitespace.</li>
+              <li>Removing a row will also remove it from the cache.</li>
+              <li><b>Sheet Name</b>: The sheet name should only contain one sheet in the spreadsheet collection. The name is found at the bottom of the screen within "Google Spreadsheets" and it looks like a tab.</li>
+              <li>If you use Google Chrome Sync, these settings will be synced, but THE VOCAB WILL NOT! You will have to reimport them (on the other computer just click "import"). It's too much data to sync.</li>
+              <li>The reading column is optional, but highly recommended since Speech Synthesis makes mistakes.</li>
+          </ol>
+        </p>
+        <table id="googleSpreadSheetListTable" class="table table-bordered table-striped table-hover">
+          <tbody>
+          </tbody>
+        </table>
+        <button id="addGoogleSpreadSheetListItem" class="btn" type="button">Add Spreadsheet</button>
       </div>
       <hr>
       <p>

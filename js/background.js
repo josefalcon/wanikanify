@@ -1,6 +1,7 @@
 /**
- * WaniKanify - 2012/12/08
+ * WaniKanify - 2012/12/08 - 2015/08/09
  * Author: jose.e.falcon@gmail.com
+ * Subauthor: todd.seiler@gmail.com
  */
 
 var executed = {}
@@ -9,20 +10,24 @@ var executed = {}
 // executeScripts : Object ->
 function executeScripts(tab) {
     chrome.tabs.get(tab, function(details) {
-        chrome.storage.local.get(['wanikanify_blackList'], function(items) {
-            var url = details.url,
-                blackList = items.wanikanify_blackList,
-                skipTest = false;
+        chrome.storage.sync.get(['wanikanify_blackList'], function(items) {
 
-            var matcher;
-            if (blackList.length == 0) {
-                skipTest = true;
-            } else {
-                matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
+            function isBlackListed(details, items) {
+                var url = details.url;
+                var blackList = items.wanikanify_blackList;
+                if (blackList) {
+                    if (blackList.length == 0) {
+                        return false;
+                    } else {
+                        var matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
+                        return (!matcher.test(url))?true:false;
+                    }
+                }
+                return false;
             }
 
 
-            if (skipTest || !matcher.test(url)) {
+            if (!isBlackListed(details, items)) {
                 chrome.tabs.executeScript(null, { file: "js/jquery.js" }, function() {
                     chrome.tabs.executeScript(null, { file: "js/replaceText.js" }, function() {
                         chrome.tabs.executeScript(null, { file: "js/content.js" }, function() {
@@ -31,7 +36,7 @@ function executeScripts(tab) {
                     });
                 });
             } else {
-                console.log(url + " is blacklisted");
+                console.log("Blacklisted");
             }
         });
     });
@@ -95,10 +100,10 @@ chrome.storage.onChanged.addListener(function(changes, store) {
 });
 
 function toggleAutoLoad(info, tab) {
-    chrome.storage.local.get("wanikanify_runOn", function(items) {
+    chrome.storage.sync.get("wanikanify_runOn", function(items) {
         var load = items.wanikanify_runOn;
         var flip = (load == "onUpdated") ? "onClick" : "onUpdated";
-        chrome.storage.local.set({"wanikanify_runOn":flip}, function() {
+        chrome.storage.sync.set({"wanikanify_runOn":flip}, function() {
             var title = (flip == "onClick") ? "Enable autoload" : "Disable autoload";
             chrome.contextMenus.update("wanikanify_context_menu", {title:title});
         });
@@ -106,7 +111,7 @@ function toggleAutoLoad(info, tab) {
 }
 
 // Check the storage. We may already be in "auto" mode.
-chrome.storage.local.get(["wanikanify_runOn","wanikanify_apiKey"], function(items) {
+chrome.storage.sync.get(["wanikanify_runOn","wanikanify_apiKey"], function(items) {
     var context = {
         id: "wanikanify_context_menu",
         contexts: ["all"],
