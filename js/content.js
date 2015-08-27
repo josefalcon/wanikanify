@@ -401,10 +401,10 @@ function buildDictionaryCallback(
         if (audio_on) {
             if (audio_on_click) {
                 return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-                    '" onClick="var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja\';window.speechSynthesis.speak(msg); var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+                    '" onClick="var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja-JP\';window.speechSynthesis.speak(msg); var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
             } else {
                 return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-                    '" onmouseover="timer1=setTimeout(function(){var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja\';window.speechSynthesis.speak(msg);}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+                    '" onmouseover="timer1=setTimeout(function(){var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja-JP\';window.speechSynthesis.speak(msg);}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
             }
         }
         else {
