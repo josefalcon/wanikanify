@@ -20,7 +20,7 @@ function executeScripts(tab) {
                         return false;
                     } else {
                         var matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
-                        return (!matcher.test(url))?true:false;
+                        return matcher.test(url);
                     }
                 }
                 return false;
