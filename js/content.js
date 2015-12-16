@@ -333,7 +333,7 @@ function getReading(wanikani_vocab_list, googleVocab, custom_vocab_list, vocab_t
             return wanikani_vocab_list[i].kana;
         }
     }
-    
+
     return vocab_to_find;
 }
 
@@ -401,15 +401,15 @@ function buildDictionaryCallback(
         if (audio_on) {
             if (audio_on_click) {
                 return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-                    '" onClick="var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja-JP\';window.speechSynthesis.speak(msg); var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+                    '" onClick="var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja-JP\';window.speechSynthesis.speak(msg); var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;" style="white-space: nowrap;">' + kanji + '<\/span>';
             } else {
                 return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-                    '" onmouseover="timer1=setTimeout(function(){var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja-JP\';window.speechSynthesis.speak(msg);}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+                    '" onmouseover="timer1=setTimeout(function(){var msg = new SpeechSynthesisUtterance(); msg.text = \'' + url + '\'; msg.lang = \'ja-JP\';window.speechSynthesis.speak(msg);}, 700);" onmouseout="clearTimeout(timer1);" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;" style="white-space: nowrap;">' + kanji + '<\/span>';
             }
         }
         else {
                 return '<span class="wanikanified" title="' + str + '" data-en="' + str + '" data-jp="' + kanji +
-                    '" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;">' + kanji + '<\/span>';
+                    '" onClick="var t = this.getAttribute(\'title\'); this.setAttribute(\'title\', this.innerHTML); this.innerHTML = t;" style="white-space: nowrap;">' + kanji + '<\/span>';
         }
     }
 }
