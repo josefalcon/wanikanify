@@ -26,13 +26,13 @@ var FILTER_MAP = {
 // The main program driver.
 // main : Object ->
 function main(cache_local) {
-    chrome.storage.sync.get([API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_META_KEY, AUDIO_KEY], function(cache_sync) {
+    chrome.storage.sync.get([API_KEY, SRS_KEY, CUST_VOCAB_KEY, GOOG_VOCAB_META_KEY, AUDIO_KEY], async function(cache_sync) {
         var apiKey = cache_sync[API_KEY];
         if (!apiKey) {
             console.error("No API key provided! Please use the options page to specify your API key.");
         }
         var vocabDictionary = {};
-        importWaniKaniVocab(vocabDictionary, cache_sync, cache_local, apiKey);
+        await importWaniKaniVocab(vocabDictionary, cache_sync, cache_local, apiKey);
         console.log("Total entries from WaniKani: " + Object.keys(vocabDictionary).length);
         importGoogleVocab(vocabDictionary, cache_local, cache_sync);
         console.log("Total entries after Google Spreadsheets: " + Object.keys(vocabDictionary).length);
@@ -51,8 +51,8 @@ function main(cache_local) {
 }
 
 // ------------------------------------------------------------------------------------------------
-function importWaniKaniVocab(vocabDictionary, cache_sync, cache_local, apiKey) {
-    var waniKaniVocabList = tryCacheOrWaniKani(cache_local, apiKey);
+async function importWaniKaniVocab(vocabDictionary, cache_sync, cache_local, apiKey) {
+    var waniKaniVocabList = await tryCacheOrWaniKani(cache_local, apiKey);
     if (waniKaniVocabList && waniKaniVocabList.length > 0) {
         var filteredList = filterVocabList(waniKaniVocabList, getFilters(cache_sync));
         var d = toDictionary(filteredList);
@@ -175,7 +175,7 @@ function getFilters(cache_sync) {
 // ------------------------------------------------------------------------------------------------
 // Returns a dictionary from String -> String.
 // tryCacheOrWaniKani : Object, String -> Object
-function tryCacheOrWaniKani(cache_local, apiKey) {
+async function tryCacheOrWaniKani(cache_local, apiKey) {
     // returns true if the given date is over an hour old.
     function isExpired(date) {
         var then = new Date(date);
@@ -186,43 +186,36 @@ function tryCacheOrWaniKani(cache_local, apiKey) {
     var hit = cache_local[VOCAB_KEY];
     if (hit && hit.vocabList) {
         if (!hit.inserted || isExpired(hit.inserted)) {
-            tryWaniKani(apiKey, true);
+            await tryWaniKani(apiKey);
         }
         return hit.vocabList;
     }
 
-    var waniKaniList = tryWaniKani(apiKey, false);
+    var waniKaniList = await tryWaniKani(apiKey);
     return waniKaniList;
 }
 
 // ------------------------------------------------------------------------------------------------
 // Returns a [Object] of vocabulary words from WaniKani
-// tryWaniKani : String, Boolean -> [Object]
-function tryWaniKani(apiKey, async) {
+// tryWaniKani : String -> [Object]
+async function tryWaniKani(apiKey) {
     if (!apiKey) {
         console.error("No API key provided! Please use the options page to specify your API key.");
         return [];
     }
 
-    var info;
-    $.ajax({
-        async: async,
-        accepts: "application/json",
-        type: "GET",
-        url: "https://www.wanikani.com/api/v1.2/user/"+apiKey+"/vocabulary",
-    }).done(function (response) {
-        if (response.error) {
-            console.error("Vocabulary request failed.");
-            info = [];
-        } else {
-            info = response.requested_information.general;
-            cacheVocabList(info);
-        }
-    }).fail(function (response) {
-        console.error("Vocabulary request failed.");
-        info = [];
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: "fetchVocab" }, (vocabList) => {
+            const error = chrome.runtime.lastError;
+            if (error) {
+                console.error(error.message);
+                reject(error);
+            } else {
+                console.log(vocabList);
+                resolve(vocabList);
+            }
+        });
     });
-    return info;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -333,7 +326,6 @@ function getReading(wanikani_vocab_list, googleVocab, custom_vocab_list, vocab_t
             return wanikani_vocab_list[i].kana;
         }
     }
-    
     return vocab_to_find;
 }
 

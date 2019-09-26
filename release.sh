@@ -1,5 +1,4 @@
 version=$1
-dir=`pwd`
 echo $1
-zip -r wanikanify-$1.zip $dir -x "*.git*"
+zip -r wanikanify-$1.zip . -x "*.git*" -x README.md -x release.sh
 

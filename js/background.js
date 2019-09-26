@@ -81,6 +81,37 @@ function buttonClicked(tab) {
     }
 }
 
+async function getApiKey() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.sync.get(["wanikanify_apiKey"], (items) => {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(items.wanikanify_apiKey);
+            }
+        });
+    });
+}
+
+async function getVocabListFromWaniKani(apiKey) {
+    return fetch("https://www.wanikani.com/api/v1.2/user/"+apiKey+"/vocabulary")
+        .then((response) => response.json())
+        .then((data) => {
+            return data.requested_information.general;
+        });
+}
+
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.type === 'fetchVocab') {
+            getApiKey()
+                .then(getVocabListFromWaniKani)
+                .then(sendResponse);
+            return true;
+        }
+    }
+);
+
 // Always execute scripts when the action is clicked.
 chrome.browserAction.onClicked.addListener(buttonClicked);
 
