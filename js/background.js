@@ -19,7 +19,7 @@ function executeScripts(tab) {
                     if (blackList.length == 0) {
                         return false;
                     } else {
-                        var matcher = new RegExp($.map(items.wanikanify_blackList, function(val) { return '('+val+')';}).join('|'));
+                        let matcher = new RegExp(items.wanikanify_blacklist.map(function(val) { return '('+val+')';}).join('|'));
                         return matcher.test(url);
                     }
                 }
