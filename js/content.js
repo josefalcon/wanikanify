@@ -15,11 +15,11 @@ var AUDIO_KEY      = "wanikanify_audio";
 
 // filter map
 var FILTER_MAP = {
-    "apprentice":  function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "apprentice"; },
-    "guru":        function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "guru"; },
-    "master":      function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "master"; },
-    "enlighten":   function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "enlighten"; },
-    "burned":      function(vocab) { return vocab.user_specific != null && vocab.user_specific.srs == "burned"; }
+    "apprentice":  (subject) => subject.data.srs_stage >= 1 && subject.data.srs_stage <= 4,
+    "guru":        (subject) => subject.data.srs_stage >= 5 && subject.data.srs_stage <= 6,
+    "master":      (subject) => subject.data.srs_stage == 7,
+    "enlighten":   (subject) => subject.data.srs_stage == 8,
+    "burned":      (subject) => subject.data.srs_stage == 9,
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -191,8 +191,7 @@ async function tryCacheOrWaniKani(cache_local, apiKey) {
         return hit.vocabList;
     }
 
-    var waniKaniList = await tryWaniKani(apiKey);
-    return waniKaniList;
+    return tryWaniKani(apiKey);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -248,22 +247,18 @@ function filterVocabList(vocabList, filters) {
 // ------------------------------------------------------------------------------------------------
 // Converts a list of vocab words to a dictionary.
 // toDictionary : [Object] -> Object
-function toDictionary(vocabList) {
-    var vocab = {};
-    $.each(vocabList, function(index, value) {
-        var character = value.character;
-        var values = value.meaning.split(", ");
-        for (var i = 0; i < values.length; i++) {
-            vocab[values[i]] = character;
-        }
-        var user_synonyms = value.user_specific.user_synonyms;
-        if (user_synonyms) {
-            for (var i = 0; i < user_synonyms.length; i++) {
-                vocab[user_synonyms[i]] = character;
-            }
-        }
+function toDictionary(list) {
+    var dict = {};
+    list.forEach((vocab) => {
+        const primaryMeanings = vocab.data.meanings.map(val => val.meaning);
+        const auxiliaryMeanings = vocab.data.auxiliary_meanings.filter(val => val.type == 'whitelist').map(val => val.meaning);
+        
+        [...primaryMeanings, ...auxiliaryMeanings, ...vocab.data.synonyms].forEach((meaning) => {
+            dict[meaning.toLowerCase()] = vocab.data.characters;
+        });
     });
-    return vocab;
+
+    return dict;
 }
 
 // ------------------------------------------------------------------------------------------------

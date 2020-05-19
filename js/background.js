@@ -93,12 +93,44 @@ async function getApiKey() {
     });
 }
 
+async function repeatPaginatedRequest(url, apiKey) {
+    const headers = { Authorization: `Bearer ${apiKey}` };
+    const response = await fetch(url, { headers });
+    const json = await response.json();
+
+    let result = json.data;
+    if (json.pages.next_url) result = result.concat(await repeatPaginatedRequest(json.pages.next_url, apiKey));
+
+    return result;
+}
+
 async function getVocabListFromWaniKani(apiKey) {
-    return fetch("https://www.wanikani.com/api/v1.2/user/"+apiKey+"/vocabulary")
-        .then((response) => response.json())
-        .then((data) => {
-            return data.requested_information.general;
-        });
+    // Request all user vocabulary assignments: https://docs.api.wanikani.com/20170710/#get-all-assignments
+    const assignments = await repeatPaginatedRequest('https://api.wanikani.com/v2/assignments?subject_types=vocabulary', apiKey);
+
+    // Request all study materials to find out about meaning synonyms: https://docs.api.wanikani.com/20170710/#study-materials
+    const studyMaterials = await repeatPaginatedRequest('https://api.wanikani.com/v2/study_materials?subject_types=vocabulary', apiKey);
+
+    // Create a map from the user's assignment subjects to a list of data that we need
+    const progress = assignments.reduce((list, assignment) => {
+        material = studyMaterials.find((material) => material.data.subject_id == assignment.data.subject_id);
+
+        list[assignment.data.subject_id] = {
+            srs_stage: assignment.data.srs_stage,
+            synonyms: material ? material.data.meaning_synonyms : [],
+        };
+        return list;
+    }, {});
+
+    // Request all vocabulary subjects the user has already learned: https://docs.api.wanikani.com/20170710/#get-all-subjects
+    const subjectIdList = Object.keys(progress).join(',');
+    const subjects = await repeatPaginatedRequest(`https://api.wanikani.com/v2/subjects?types=vocabulary&ids=${subjectIdList}`, apiKey);
+    
+    // Augment the subjects by adding the user's current SRS progress
+    return subjects.map((subject) => {
+        subject.data = { ...subject.data, ...progress[subject.id] };
+        return subject;
+    });
 }
 
 chrome.runtime.onMessage.addListener(
